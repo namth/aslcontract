@@ -4,3 +4,9 @@
     Description: This is a custom theme for Asl contract
     Version: 1.0
 */
+.fa-150p {
+    font-size: 1.5em;
+}
+.btn-rounded {
+    --bs-btn-padding-x: 1em;
+}
