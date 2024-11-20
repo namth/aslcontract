@@ -2,6 +2,7 @@
 /* import vendor autoload form root directory */
 require_once ABSPATH .'/vendor/autoload.php';
 require_once __DIR__ .'/functions/google_api.php';
+require_once __DIR__ .'/functions/onedrive_api.php';
 
 /* enqueue js css function */
 function enqueue_js_css(){
