@@ -3,7 +3,7 @@
     Template Name: OneDrive Test
 */
 ($config = include __DIR__ . '/config.php') or die('Configuration file not found');
-$scopes = ['Files.Read.All', 'Files.ReadWrite.All'];
+$scopes = ['Files.ReadWrite.All', 'User.Read'];
 $appId = $config['ONEDRIVE_CLIENT_ID'];
 $redirectUri = $config['ONEDRIVE_REDIRECT_URI'];
 
@@ -63,14 +63,6 @@ get_header();
                         <a href="<?php echo get_authorize_url(); ?>" id="connectToOneDrive">Kết nối với OneDrive</a>
                         <?php
 
-                        $tokenRequestContext = new ClientCredentialContext(
-                            $config['TENANT_ID'],
-                            $config['ONEDRIVE_CLIENT_ID'],
-                            $config['ONEDRIVE_CLIENT_SECRET']
-                        );
-
-                        print_r($tokenRequestContext);
-                        
                         ?>
                     </div>
                 </div>
