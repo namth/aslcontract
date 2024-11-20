@@ -3,9 +3,10 @@
     Template Name: OneDrive Test
 */
 ($config = include __DIR__ . '/config.php') or die('Configuration file not found');
-$scopes = ['Files.ReadWrite.All', 'User.Read'];
+$scopes = ['Files.ReadWrite.All', 'User.Read.All'];
 $appId = $config['ONEDRIVE_CLIENT_ID'];
 $redirectUri = $config['ONEDRIVE_REDIRECT_URI'];
+$tenantId = $config['TENANT_ID'];
 
 use Microsoft\Kiota\Authentication\Oauth\ClientCredentialContext;
 use Microsoft\Graph\Core\Authentication\GraphPhpLeagueAuthenticationProvider;
