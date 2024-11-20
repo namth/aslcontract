@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/vendor/autoload.php';
+/* import vendor autoload form root directory */
+require_once ABSPATH .'/vendor/autoload.php';
 require_once __DIR__ .'/functions/google_api.php';
 
 /* enqueue js css function */

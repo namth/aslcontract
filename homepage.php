@@ -3,7 +3,6 @@
     Template Name: Homepage
 */
 get_header();
-
 ?>
 <div class="content-wrapper">
     <div class="card card-rounded">
@@ -38,10 +37,10 @@ get_header();
                                 </div>
                             </div>
                             <div class="d-flex align-items-right justify-content-between gap-1"> 
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-edit"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-cloud-download"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-eye"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-trash-o"></i></a>
+                                <a href="#" class="btn btn-inverse-info btn-rounded"><i class="fa fa-pencil"></i></a>
+                                <a href="#" class="btn btn-inverse-warning btn-rounded"><i class="fa fa-cloud-download"></i></a>
+                                <a href="#" class="btn btn-inverse-success btn-rounded"><i class="fa fa-eye"></i></a>
+                                <a href="#" class="btn btn-inverse-danger btn-rounded"><i class="fa fa-trash-o"></i></a>
                             </div>
                         </div>
                         <div class="wrapper d-flex align-items-center justify-content-between py-2 border-bottom">
@@ -52,10 +51,10 @@ get_header();
                                 </div>
                             </div>
                             <div class="d-flex align-items-right justify-content-between gap-1"> 
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-edit"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-cloud-download"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-eye"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-trash-o"></i></a>
+                                <a href="#" class="btn btn-inverse-info btn-rounded"><i class="fa fa-pencil"></i></a>
+                                <a href="#" class="btn btn-inverse-warning btn-rounded"><i class="fa fa-cloud-download"></i></a>
+                                <a href="#" class="btn btn-inverse-success btn-rounded"><i class="fa fa-eye"></i></a>
+                                <a href="#" class="btn btn-inverse-danger btn-rounded"><i class="fa fa-trash-o"></i></a>
                             </div>
                         </div>
                         <div class="wrapper d-flex align-items-center justify-content-between py-2 border-bottom">
@@ -66,10 +65,10 @@ get_header();
                                 </div>
                             </div>
                             <div class="d-flex align-items-right justify-content-between gap-1"> 
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-edit"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-cloud-download"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-eye"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-trash-o"></i></a>
+                                <a href="#" class="btn btn-inverse-info btn-rounded"><i class="fa fa-pencil"></i></a>
+                                <a href="#" class="btn btn-inverse-warning btn-rounded"><i class="fa fa-cloud-download"></i></a>
+                                <a href="#" class="btn btn-inverse-success btn-rounded"><i class="fa fa-eye"></i></a>
+                                <a href="#" class="btn btn-inverse-danger btn-rounded"><i class="fa fa-trash-o"></i></a>
                             </div>
                         </div>
                         <div class="wrapper d-flex align-items-center justify-content-between py-2">
@@ -80,10 +79,10 @@ get_header();
                                 </div>
                             </div>
                             <div class="d-flex align-items-right justify-content-between gap-1"> 
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-edit"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-cloud-download"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-eye"></i></a>
-                                <a href="#" class="btn btn-inverse-light btn-rounded"><i class="fa fa-trash-o"></i></a>
+                                <a href="#" class="btn btn-inverse-info btn-rounded"><i class="fa fa-pencil"></i></a>
+                                <a href="#" class="btn btn-inverse-warning btn-rounded"><i class="fa fa-cloud-download"></i></a>
+                                <a href="#" class="btn btn-inverse-success btn-rounded"><i class="fa fa-eye"></i></a>
+                                <a href="#" class="btn btn-inverse-danger btn-rounded"><i class="fa fa-trash-o"></i></a>
                             </div>
                         </div>
                     </div>
