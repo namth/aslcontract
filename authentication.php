@@ -11,7 +11,7 @@ $tenantId = $config['TENANT_ID'];
 $clientId = $config['ONEDRIVE_CLIENT_ID'];
 $clientSecret = $config['ONEDRIVE_CLIENT_SECRET'];
 $redirectUri = $config['ONEDRIVE_REDIRECT_URI'];
-$scopes = ['Files.ReadWrite.All', 'User.Read'];
+$scopes = ['Files.ReadWrite.All', 'User.Read.All'];
 
 $authcode = $_GET['code']; // Lấy authorization code
 $state = $_GET['state']; // Lấy authorization code
