@@ -8,17 +8,18 @@ use Google\Service\Docs\Request as Google_Service_Docs_Request;
 use Google\Service\Docs\BatchUpdateDocumentRequest as Google_Service_Docs_BatchUpdateDocumentRequest;
 
 
-// // Load credentials from file
-// $client = new Google_Client();
-// $client->setApplicationName("ASL Contract");
-// $client->addScope(Google_Service_Drive::DRIVE);
-// $client->setAccessType('offline');
+// Load credentials from file
+$client = new Google_Client();
+$client->setApplicationName("ASL Contract");
+$client->addScope(Google_Service_Drive::DRIVE);
+$client->setAccessType('offline');
+$client->setAuthConfig(__DIR__ . '/asl-contract-client-oauth.json');
 // $client->setAuthConfig(__DIR__ . '/asl-contract-01fd683a00f9.json');
 
-// // Get the ID of the file to duplicate
+// Get the ID of the file to duplicate
 // $sourceFileId = '1a4l5i3RiMBkxwMWj20bCR3drrfM8IRUDyBAZ_EVYGOo';
 // $folderId = '1J7DMIPwy4YGyAN6sI6gYetd-UK-8vnoV';
-// $newfilename = 'Hợp đồng lao động - Nguyễn Duy Sơn';
+// $filename_template = 'Hợp đồng lao động';
 
 
 get_header();
@@ -30,12 +31,12 @@ get_header();
                 <div class="d-sm-flex align-items-center justify-content-between border-bottom">
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link ps-0" id="home-tab" data-bs-toggle="tab" href="#overview"
-                                role="tab" aria-controls="overview" aria-selected="false">Overview</a>
+                            <a class="nav-link ps-0" id="home-tab" data-bs-toggle="tab" href="#overview" role="tab"
+                                aria-controls="overview" aria-selected="false">Overview</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" id="profile-tab" data-bs-toggle="tab" href="#audiences" role="tab"
-                                aria-selected="true">Audiences</a>
+                            <a class="nav-link active" id="profile-tab" data-bs-toggle="tab" href="#audiences"
+                                role="tab" aria-selected="true">Audiences</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" id="contact-tab" data-bs-toggle="tab" href="#demographics" role="tab"
@@ -61,7 +62,31 @@ get_header();
                             <div class="col-sm-12">
                                 <div class="statistics-details align-items-center justify-content-between">
                                     <?php
-                                    /* Clone docs file from source template file */
+                                    /* Replace text in docs file */
+                                    // $replacements = array(
+                                    //     '{your_name}' => 'Trần Hải Nam',
+                                    //     '{job}' => 'Nhân viên',
+                                    //     '{country}' => 'Việt Nam',
+                                    //     '{CCCD}' => '123456789',
+                                    //     '{date_of_issue}' => '21/03/2021',
+                                    //     '{your_email}' => 'namth.pass@gmail.com',
+                                    //     '{your_phone}' => '098.689.6800',
+                                    //     '{your_address}' => 'Tổ 12 phường Sài Đồng, Long Biên, Hà Nội',
+                                    // );
+                                    // $replacements = array(
+                                    //     '{your_name}' => 'Nguyễn Duy Sơn',
+                                    //     '{job}' => 'Nhân viên',
+                                    //     '{country}' => 'Việt Nam',
+                                    //     '{CCCD}' => '1234567890',
+                                    //     '{date_of_issue}' => '28/05/2021',
+                                    //     '{your_email}' => 'duyson126@gmail.com',
+                                    //     '{your_phone}' => '0367.542.037',
+                                    //     '{your_address}' => 'Xóm Yên Phú, xã Văn Thành, huyện Yên Thành, tỉnh Nghệ An',
+                                    // );
+                                    
+                                    // $newfilename = $filename_template . ' - ' . $replacements['{your_name}'];
+                                    
+                                    // /* Clone docs file from source template file */
                                     // $new_file = new Google_Service_Drive_File();
                                     // $optParams = array(
                                     //     'folderId' => $folderId,
@@ -72,13 +97,6 @@ get_header();
                                     // if ($copyfileID) {
                                     //     echo 'Clone thành công: '. $copyfileID;
                                     
-                                    //     /* Replace text in docs file */
-                                    //     $replacements = array(
-                                    //         '{your_email}' => 'duyson126@gmail.com',
-                                    //         '{your_phone}' => '0367.542.037',
-                                    //     );
-                                    
-
                                     //     $result = google_docs_replaceText($copyfileID, $replacements);
                                     
                                     // } else {
@@ -90,52 +108,22 @@ get_header();
                         </div>
                     </div>
                     <div class="tab-pane fade show active" id="audiences" role="tabpanel" aria-labelledby="overview">
-                        Audiences
-
                         <?php
-                        if (isset($_GET["code"]) && $_GET["code"]) {
-                            // Load credentials from file
-                            $client = new Google_Client();
-                            $client->setAuthConfig(__DIR__ . '/asl-contract-client-oauth.json');
-                            $client->addScope(Google_Service_Drive::DRIVE_READONLY);
+                        // $client->setRedirectUri('https://iv.io.vn/google-auth');
+                        // $authUrl = $client->createAuthUrl();
 
-                            // Get authorization code
-                            $code = $_GET['code'];
-
-                            // Get access token
-                            $client->authenticate($code);
-                            $accessToken = $client->getAccessToken();
-
-                            // Create Google Drive service
-                            $service = new Google_Service_Drive($client);
-
-                            // Get file information
-                            $fileId = $_GET['fileId']; // File ID from Google Drive
-                            $file = $service->files->get($fileId);
-
-                            // Display file information
-                            echo '<h1>Thông tin File</h1>';
-                            echo '<p>Tên File: ' . $file->getName() . '</p>';
-                            echo '<p>ID File: ' . $file->getId() . '</p>';
-                            echo '<p>Loại File: ' . $file->getMimeType() . '</p>';
-                            echo '<p>Kích thước File: ' . $file->getSize() . ' bytes</p>';
-                        } else {
                         ?>
 
-                        <button id="pickFile">Chọn File</button>
-                        <div id="fileInformation"></div>
+                        <button id="chooseGoogleDriveFile">Chọn File từ Google Drive</button>
+                        <div id="fileID"></div>
 
                         <script>
-                            jQuery(document).ready(function () {
-                                jQuery('#pickFile').click(function () {
-                                    // Mở popup chọn file của Google Drive
-                                    window.open('https://accounts.google.com/o/oauth2/auth?client_id=912936701906-6moube1rdg93dnht69q2r59dij8onura.apps.googleusercontent.com&redirect_uri=http://aslcontract.local&response_type=code&scope=https://www.googleapis.com/auth/drive.readonly', 'GoogleDriveFilePicker', 'width=800,height=600');
-                                });
+                            document.getElementById('chooseGoogleDriveFile').addEventListener('click', () => {
+                                window.location.href = `<?php echo $authUrl; ?>`; // Gọi URL xác thực từ WordPress
                             });
                         </script>
-                        
+
                         <?php
-                        }
                         ?>
                     </div>
                 </div>

@@ -58,8 +58,6 @@ get_header();
                         </div>
                     </div>
                     <div class="tab-pane fade show active" id="audiences" role="tabpanel" aria-labelledby="overview">
-                        Audiences
-
 
                         <a href="<?php echo get_authorize_url(); ?>" id="connectToOneDrive">Kết nối với OneDrive</a>
                         <?php

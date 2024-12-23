@@ -1,14 +1,14 @@
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     <ul class="nav">
         <li class="nav-item">
-            <a class="nav-link" href="../../index.html">
+            <a class="nav-link" href="<?php /* echo homepage url */ echo get_bloginfo('url'); ?>">
                 <i class="mdi mdi-grid-large menu-icon"></i>
                 <span class="menu-title">Dashboard</span>
             </a>
         </li>
         <li class="nav-item nav-category">Quản lý file</li>
         <li class="nav-item">
-            <a class="nav-link" href="#ui-basic">
+            <a class="nav-link" href="<?php echo get_bloginfo('url'); ?>/create-file-from-template">
                 <i class="menu-icon mdi mdi-file-document-plus-outline"></i>
                 <span class="menu-title">Tạo hợp đồng</span>
                 <!-- <i class="menu-arrow"></i> -->

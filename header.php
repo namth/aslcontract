@@ -22,7 +22,7 @@
         </div>
         <div>
           <a class="navbar-brand brand-logo" href="../../index.html">
-            <img src="<?php echo get_template_directory_uri(); ?>/assets/images/logo.svg" alt="logo" />
+            <img src="<?php echo get_template_directory_uri(); ?>/img/asl_logo.png" alt="logo" />
           </a>
           <a class="navbar-brand brand-logo-mini" href="../../index.html">
             <img src="<?php echo get_template_directory_uri(); ?>/assets/images/logo-mini.svg" alt="logo" />
