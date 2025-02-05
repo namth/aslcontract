@@ -2,6 +2,7 @@
 use Google\Client as Google_Client;
 use Google\Service\Drive as Google_Service_Drive;
 use Google\Service\Drive\DriveFile as Google_Service_Drive_File;
+use Google\Service\Drive\Permission as Google_Service_Drive_Permission;
 use Google\Service\Docs as Google_Service_Docs;
 use Google\Service\Docs\SubstringMatchCriteria as Google_Service_SubstringMatchCriteria;
 use Google\Service\Docs\Request as Google_Service_Docs_Request;
@@ -69,6 +70,23 @@ function google_clone_file($sourceFileId, Google_Service_Drive_File $new_file, $
         // Move the new file to specific folder
         $new_file->setParents(array($optParams['folderId']));
         $copiedFile = $service->files->copy($sourceFileId, $new_file);
+
+        // set permission for the new file, share with anyone can view with link
+        $permission = new Google_Service_Drive_Permission();
+        $permission->setRole('reader');
+        $permission->setType('anyone'); // anyoneWithLink
+
+        $result = $service->permissions->create($copiedFile->id, $permission);
+
+        // set permission for the new file, share with specific email
+        if (isset($optParams['email'])) {
+            $permission = new Google_Service_Drive_Permission();
+            $permission->setRole('writer'); // Hoặc 'reader' nếu chỉ muốn cho phép xem
+            $permission->setType('user');
+            $permission->setEmailAddress($optParams['email']);
+
+            $result = $service->permissions->create($copiedFile->id, $permission);
+        }
 
         return $copiedFile->id;
     } catch (Exception $e) {
@@ -210,3 +228,93 @@ function insertImageIntoGoogleDoc($fileId, $imageUrl, $textToReplace = '{your_im
 
     return ['success' => true, 'message' => 'Hình ảnh đã được chèn'];
 }
+
+/* 
+* set permission for file, share with anyone can view with link
+*/
+function shareFileWithLink( $fileId ) {
+    global $client; // Giả sử bạn đã có đối tượng Google_Client đã xác thực
+    
+    $service = new Google_Service_Drive($client);
+
+    try {
+        $permission = new Google_Service_Drive_Permission();
+        $permission->setRole('reader');
+        $permission->setType('anyone'); // anyoneWithLink
+
+        $result = $service->permissions->create($fileId, $permission);
+
+        if ($result) {
+            return ['success' => true, 'message' => 'File đã được chia sẻ với bất cứ ai có link.', 'link' => $result->getLink()];
+        } else {
+            return ['success' => false, 'message' => 'Lỗi khi chia sẻ file.'];
+        }
+
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()];
+    }
+}
+
+
+function shareFileWithEmail($fileId, $emailAddress) {
+    global $client; // Giả sử bạn đã có đối tượng Google_Client đã được xác thực
+    
+    $service = new Google_Service_Drive($client);
+
+    try {
+        $permission = new Google_Service_Drive_Permission();
+        $permission->setRole('writer'); // Hoặc 'reader' nếu chỉ muốn cho phép xem
+        $permission->setType('user');
+        $permission->setEmailAddress($emailAddress);
+
+        $result = $service->permissions->create($fileId, $permission);
+
+        if ($result) {
+            return ['success' => true, 'message' => 'File đã được chia sẻ với ' . $emailAddress . '.'];
+        } else {
+            return ['success' => false, 'message' => 'Lỗi khi chia sẻ file.'];
+        }
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()];
+    }
+}
+
+/* function shareFileWithMultipleEmails($fileId, $emailAddresses) {
+    global $client; // Giả sử bạn đã có đối tượng Google_Client đã được xác thực
+    
+    $service = new Google_Service_Drive($client);
+
+    try {
+        $permissions = [];
+        foreach ($emailAddresses as $emailAddress) {
+            $permission = new Google_Service_Drive_Permission();
+            $permission->setRole('writer'); // Hoặc 'reader'
+            $permission->setType('user');
+            $permission->setEmailAddress($emailAddress);
+            $permissions[] = $permission;
+        }
+
+
+        $batch = new Google_Service_Drive_BatchRequest();
+        foreach ($permissions as $permission){
+          $batch->add($service->permissions->create($fileId, $permission, ['fields' => 'id']));
+        }
+
+        $results = $batch->execute();
+
+        $success = true;
+        $message = '';
+        foreach ($results as $result){
+          if (!$result->success){
+            $success = false;
+            $message .= "Error sharing with: ". $result->error->message . "\n";
+          }
+        }
+
+        return ['success' => $success, 'message' => $success ? 'Files have been shared successfully' : $message];
+
+
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()];
+    }
+} */
