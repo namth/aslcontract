@@ -282,7 +282,7 @@ function getGoogleClient(){
     $client->setApplicationName("ASL Contract");
     $client->addScope(Google_Service_Drive::DRIVE);
     $client->setAccessType('offline');
-    $client->setAuthConfig(__DIR__ . '/asl-contract-01fd683a00f9.json');
+    $client->setAuthConfig(ABSPATH . '/asl-contract-01fd683a00f9.json');
     return $client;
 }
 add_action('init', 'getGoogleClient');
