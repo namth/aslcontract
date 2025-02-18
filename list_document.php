@@ -7,14 +7,17 @@ global $wpdb;
 
 $current_user = wp_get_current_user();
 $current_user_id = $current_user->ID;
+$your_staffs = get_staff_ids($current_user_id);
+# put current user id to $your_staffs array
+array_push($your_staffs, $current_user_id);
 ?>
 <div class="content-wrapper">
     <div class="row">
         <div class="col-sm-12">
             <?php
                 $table_name = $wpdb->prefix . 'asldocument';
-                # get all documents where userID = current user id, and order by documentModified DESC
-                $documents = $wpdb->get_results("SELECT * FROM $table_name WHERE userID = $current_user_id ORDER BY documentModified DESC");
+                # get all documents where userID in $your_staffs array, and order by documentModified DESC
+                $documents = $wpdb->get_results("SELECT * FROM $table_name WHERE userID IN (" . implode(',', $your_staffs) . ") ORDER BY documentModified DESC");
  
                 # if have tags, then show list of tags
                 echo '<div class="d-flex justify-content-between align-items-center mb-3">
@@ -26,6 +29,9 @@ $current_user_id = $current_user->ID;
 
                 if ($documents) {
                     foreach ($documents as $document) {
+                        $document_user = get_userdata($document->userID);
+                        # get user page link from $document_user->ID
+                        $user_link = get_author_posts_url($document_user->ID);
                         ?>
                         <div class="card card-rounded p-2 d-flex align-items-center justify-content-between flex-row gap-3">
                             <span class="d-flex align-items-center justify-content-left nav-link ps-2 w-100">
@@ -43,7 +49,7 @@ $current_user_id = $current_user->ID;
                                 </div>
                                 <div class="p-2 d-flex align-items-center card-subtitle">
                                     <i class="ph ph-user me-1"></i>
-                                    <small><?php echo $current_user->display_name; ?></small>
+                                    <small><?php echo "<a href='$user_link' class='nav-link'>" . $document_user->display_name . "</a>"; ?></small>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center gap-2">
                                     <a href="<?php echo home_url('/googledrive/?action=view&documentID=' . $document->documentID); ?>" class="nav-link fa-150p" target="_blank">

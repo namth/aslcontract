@@ -5,7 +5,7 @@
     Version: 1.0
 */
 .fa-150p {
-    font-size: 1.5em;
+    font-size: 1.5em !important;
 }
 .btn-rounded {
     --bs-btn-padding-x: 1em;
@@ -147,4 +147,13 @@
 }
 .border-radius-9{
     border-radius: 9px;
+}
+.asl-template-action{
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+.asl-template:hover .asl-template-action {
+    display: flex;
 }

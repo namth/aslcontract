@@ -7,14 +7,17 @@ global $wpdb;
 # get user id from url
 $userid = $_GET['userid'];
 # if current user is not admin, $userid is current user id
-if (!$userid && current_user_can('administrator')) {
+if (!$userid) {
     $userid = get_current_user_id();
 } else {
-    wp_redirect(home_url('/list-user'));
-    exit;
+    # if user is not admin, then redirect to list user page
+    if (!current_user_can('administrator')) {
+        wp_redirect(home_url('/list-user'));
+        exit;
+    }
 }
 # get user object
-$current_user = get_user_by('ID', $userid);
+$get_user = get_user_by('ID', $userid);
 # get user meta
 $position = get_user_meta($userid, 'position', true);
 $phone = get_user_meta($userid, 'phone', true);
@@ -109,15 +112,15 @@ get_header();
                                 <div class="form-group">
                                     <label class="fw-bold" for="username">Tên đăng nhập</label>
                                     <input type="text" class="form-control text-center" id="username" name="username"
-                                        placeholder="Tên đăng nhập" value="<?php echo $current_user->user_login; ?>">
+                                        placeholder="Tên đăng nhập" value="<?php echo $get_user->user_login; ?>">
                                 </div>
                                 <div class="form-group">
                                     <label class="fw-bold" for="displayName">Họ và tên</label>
-                                    <input type="text" class="form-control text-center" id="displayName" name="displayName" value="<?php echo $current_user->display_name; ?>">
+                                    <input type="text" class="form-control text-center" id="displayName" name="displayName" value="<?php echo $get_user->display_name; ?>">
                                 </div>
                                 <div class="form-group">
                                     <label class="fw-bold" for="email">Email</label>
-                                    <input type="text" class="form-control text-center" id="email" name="email" value="<?php echo $current_user->user_email; ?>">
+                                    <input type="text" class="form-control text-center" id="email" name="email" value="<?php echo $get_user->user_email; ?>">
                                 </div>
                                 <div class="form-group">
                                     <label class="fw-bold" for="phone">Số điện thoại</label>

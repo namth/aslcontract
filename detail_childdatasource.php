@@ -15,6 +15,16 @@ if (!$child) {
 } else {
     $source = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asldatasource WHERE sourceID = $child->sourceID");
 
+    # if delete action is requested, then delete this child
+    if (isset($_GET['action']) && ($_GET['action'] == 'delete')) {
+        $table_name = $wpdb->prefix . 'aslchilddatasource';
+        $wpdb->delete($table_name, ['childID' => $childID]);
+
+        $notification = '<div class="alert alert-success" role="alert">Xóa thành công</div>';
+        # redirect to datasource page
+        wp_redirect(home_url('/datasource'));
+        exit;
+    }
 }
 ?>
 <div class="content-wrapper">
@@ -38,8 +48,6 @@ if (!$child) {
                                 echo $notification;
                             }
 
-                            // print_r($child);
-                            // echo "<span>Data ID: " . $child->childID . "</span>";
                             echo '<table class="table table-bordered fit-content">';
                             echo '<tr><th>Tên data</th><td>' . $child->childName . '</td></tr>';
                             echo '<tr><th>Mô tả</th><td>' . $child->childDescription . '</td></tr>';
@@ -52,6 +60,12 @@ if (!$child) {
                             <div class="form-group d-flex justify-content-left mt-3">
                                 <a href="<?php echo home_url('/edit-child-data?childID=') . $child->childID; ?>" class="btn btn-info btn-icon-text me-2 d-flex align-items-center">
                                     <i class="ph ph-pencil-simple-line btn-icon-prepend fa-150p"></i> Sửa dữ liệu
+                                </a>
+                                <a href="<?php 
+                                    # show alert with javascript to confirm delete, then go to this page with action=delete and childID
+                                    echo home_url('/child-data?action=delete&childID=') . $child->childID;                                     
+                                    ?>" class="btn btn-icon-text me-2 d-flex align-items-center" onclick="return confirm('Bạn có chắc chắn muốn xóa?')">
+                                    <i class="ph ph-trash btn-icon-prepend fa-150p"></i> Xóa
                                 </a>
                             </div>
                         </div>

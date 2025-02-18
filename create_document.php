@@ -141,6 +141,7 @@ validate form data and create new contract
                                         $childData = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $child->childID");
                                         
                                         # print replacement data
+                                        if ($childData) {
                                         ?>
                                         <div class="data_replace_box d-flex align-items-center gap-4 fit-content">
                                             <div class="d-flex justify-content-center flex-column text-center">
@@ -165,6 +166,7 @@ validate form data and create new contract
                                             </div>
                                         </div>
                                         <?php
+                                        }                                        
                                     }
                                 }
                                 wp_nonce_field('post_contract', 'post_contract_field');

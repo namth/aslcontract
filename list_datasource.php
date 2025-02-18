@@ -11,8 +11,8 @@ get_header();
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="d-flex justify-content-between align-items-center w-100">
                     <h4 class="display-4">Danh sách dữ liệu</h4>
-                    <a href="<?php echo home_url('/them-datasource'); ?>" class="btn btn-info btn-icon-text d-flex align-items-center db_addnew">
-                        <i class="ph ph-squares-four me-2"></i> Thêm mới nhóm dữ liệu
+                    <a href="<?php echo home_url('/them-datasource'); ?>" class="btn btn-info btn-icon-text d-flex align-items-center db_addnew p-2 px-3">
+                        <i class="ph ph-squares-four me-2 fa-150p"></i> Thêm mới nhóm dữ liệu
                     </a>
                 </div>
             </div>

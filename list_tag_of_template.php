@@ -19,8 +19,8 @@ get_header();
                     echo '<div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="d-flex justify-content-between align-items-center w-100">
                                 <h4 class="display-4">Danh sách thư mục</h4>
-                                <a href="' . home_url("/add-new-folder") . '" class="btn btn-info btn-icon-text d-flex align-items-center">
-                                    <i class="ph ph-folder-simple-plus me-2"></i> Thêm mới thư mục
+                                <a href="' . home_url("/add-new-folder") . '" class="btn btn-info btn-icon-text d-flex align-items-center p-2 px-3">
+                                    <i class="ph ph-folder-simple-plus me-2 fa-150p"></i> Thêm mới thư mục
                                 </a>
                             </div>
                         </div>

@@ -52,46 +52,46 @@ function enqueue_js_css(){
 add_action('wp_enqueue_scripts', 'enqueue_js_css');
 
 
-add_action('wp_ajax_select_google_drive_file', 'process_google_drive_file_selection');
-add_action('wp_ajax_nopriv_select_google_drive_file', 'process_google_drive_file_selection');
+// add_action('wp_ajax_select_google_drive_file', 'process_google_drive_file_selection');
+// add_action('wp_ajax_nopriv_select_google_drive_file', 'process_google_drive_file_selection');
 
-function process_google_drive_file_selection(){
-    $accessTokenJson = urldecode($_GET['token']);
-    $accessToken = json_decode($accessTokenJson, true);
+// function process_google_drive_file_selection(){
+//     $accessTokenJson = urldecode($_GET['token']);
+//     $accessToken = json_decode($accessTokenJson, true);
 
-    $client = new Google_Client();
-    $client->setAuthConfig(__DIR__ . '/asl-contract-client-oauth.json');
-    $client->setAccessToken($accessToken);
-    $service = new Google_Service_Drive($client);
+//     $client = new Google_Client();
+//     $client->setAuthConfig(__DIR__ . '/asl-contract-client-oauth.json');
+//     $client->setAccessToken($accessToken);
+//     $service = new Google_Service_Drive($client);
 
-    // Logic để cho phép người dùng chọn file (phần này cần dùng Javascript, không thể làm trực tiếp bằng PHP)
-    // ... (Ví dụ: Sử dụng thư viện JavaScript của bên thứ 3) ...  Giả sử file ID được truyền từ Javascript qua AJAX
-    $fileId = isset($_GET['fileId']) ? $_GET['fileId'] : null; 
+//     // Logic để cho phép người dùng chọn file (phần này cần dùng Javascript, không thể làm trực tiếp bằng PHP)
+//     // ... (Ví dụ: Sử dụng thư viện JavaScript của bên thứ 3) ...  Giả sử file ID được truyền từ Javascript qua AJAX
+//     $fileId = isset($_GET['fileId']) ? $_GET['fileId'] : null; 
 
-    if ($fileId) {
-        try {
-            $file = $service->files->get($fileId, array('fields' => 'id, name, mimeType, size'));
-            $fileData = [
-                'success' => true,
-                'fileId' => $file->getId(),
-                'fileName' => $file->getName(),
-                'fileType' => $file->getMimeType(),
-                'fileSize' => $file->getSize(),
-            ];
-            header('Content-Type: application/json');
-            echo json_encode($fileData);
-        } catch (Exception $e) {
-            $fileData = ['success' => false, 'error' => $e->getMessage()];
-            header('Content-Type: application/json');
-            echo json_encode($fileData);
-        }
-    } else {
-        $fileData = ['success' => false, 'error' => 'No file selected'];
-        header('Content-Type: application/json');
-        echo json_encode($fileData);
-    }
-    wp_die();
-}
+//     if ($fileId) {
+//         try {
+//             $file = $service->files->get($fileId, array('fields' => 'id, name, mimeType, size'));
+//             $fileData = [
+//                 'success' => true,
+//                 'fileId' => $file->getId(),
+//                 'fileName' => $file->getName(),
+//                 'fileType' => $file->getMimeType(),
+//                 'fileSize' => $file->getSize(),
+//             ];
+//             header('Content-Type: application/json');
+//             echo json_encode($fileData);
+//         } catch (Exception $e) {
+//             $fileData = ['success' => false, 'error' => $e->getMessage()];
+//             header('Content-Type: application/json');
+//             echo json_encode($fileData);
+//         }
+//     } else {
+//         $fileData = ['success' => false, 'error' => 'No file selected'];
+//         header('Content-Type: application/json');
+//         echo json_encode($fileData);
+//     }
+//     wp_die();
+// }
 
 function createDatabase(){
     global $wpdb;
@@ -320,4 +320,12 @@ function get_manager_ids($userID) {
         $manager_id[] = $m->managerID;
     }
     return $manager_id;
+}
+
+# hide admin bar for all users except admin
+add_action('after_setup_theme', 'remove_admin_bar');
+function remove_admin_bar() {
+    // if (!current_user_can('administrator') && !is_admin()) {
+        show_admin_bar(false);
+    // }
 }

@@ -51,8 +51,8 @@ if ($action == 'view') {
     wp_redirect(home_url('/list-document'));
     exit;
 } else if ($action == 'download') {
-    $extension = $_POST['type'] ?? 'docx';
-    switch ($type) {
+    $extension = $_GET['type'] ?? 'docx';
+    switch ($extension) {
         case 'pdf':
             $mimeType = 'application/pdf';
             break;
@@ -66,7 +66,7 @@ if ($action == 'view') {
             'alt' => 'media'));
         $content = $response->getBody()->getContents();
 
-        $filename = $document->documentName . '.docx';
+        $filename = $document->documentName . '.' . $extension;
         # download file to docx
         header('Content-Type: ' . $mimeType);
         header('Content-Disposition: attachment; filename="' . $filename . '"');

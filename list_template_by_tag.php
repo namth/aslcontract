@@ -29,8 +29,8 @@ $tag = $wpdb->get_row("SELECT * FROM $table_name WHERE tagID = $tagid");
                 echo '<div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="d-flex justify-content-between align-items-center w-100">
                                 <h4 class="display-4">' . $tag->tagName . '</h4>
-                                <a href="' . home_url("/add-new-template") . '" class="btn btn-info btn-icon-text d-flex align-items-center">
-                                    <i class="ph ph-folder-simple-plus me-2"></i> Thêm mới mẫu hợp đồng
+                                <a href="' . home_url("/add-new-template") . '" class="btn btn-info btn-icon-text d-flex align-items-center p-2 px-3">
+                                    <i class="ph ph-folder-simple-plus me-2 fa-150p"></i> Thêm mới mẫu hợp đồng
                                 </a>
                             </div>
                         </div>';
@@ -45,15 +45,23 @@ $tag = $wpdb->get_row("SELECT * FROM $table_name WHERE tagID = $tagid");
 
                     foreach ($templates as $template) {
                         ?>
-                        <div class="card card-rounded p-3 w165">
+                        <div class="card card-rounded p-3 w165 asl-template gap-3">
                             <a href="<?php echo home_url('/template/?templateID=') . $template->templateID; ?>" class="d-flex justify-content-center flex-column text-center nav-link">
                                 <i class="ph ph-file-text icon-lg p-4"></i>
-                                <div class="p-2 d-flex flex-column">
+                                <div class="d-flex flex-column">
                                     <span class="fw-bold">
                                         <?php echo $template->templateName; ?>
                                     </span>
                                 </div>
                             </a>
+                            <div class="asl-template-action">
+                                <a href="<?php echo home_url('/template/?templateID=') . $template->templateID; ?>" class="asl-round-btn nav-link text-primary">
+                                    <i class="ph ph-eye fa-150p"></i>
+                                </a>
+                                <a href="<?php echo home_url('/create-document?templateID=') . $template->templateID; ?>" class="asl-round-btn nav-link text-primary pr-2">
+                                    <i class="ph ph-sparkle fa-150p"></i>
+                                </a>
+                            </div>
                         </div>
                         <?php
                     }
