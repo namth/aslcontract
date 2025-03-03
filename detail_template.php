@@ -2,11 +2,23 @@
 /* 
 *   Template Name: Detail Template
 */
-get_header();
 global $wpdb;
 
 $templateID = $_GET['templateID'];
-$template = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltemplate WHERE templateID = $templateID");
+$table_name = $wpdb->prefix . 'asltemplate';
+$template = $wpdb->get_row("SELECT * FROM $table_name WHERE templateID = $templateID");
+
+# if delete action is requested, then delete this template
+if (isset($_GET['action']) && ($_GET['action'] == 'delete')) {
+    $wpdb->delete($table_name, ['templateID' => $templateID]);
+
+    $notification = '<div class="alert alert-success" role="alert">Xóa thành công</div>';
+    # redirect to datasource page
+    wp_redirect(home_url('/list-folder'));
+    exit;
+}
+
+get_header();
 
 # get user by id from wp_users table
 $create_user = get_userdata($template->userID);
@@ -44,8 +56,10 @@ $create_user = get_userdata($template->userID);
                                 foreach ($childs as $child) {
                                     # get childName from aslchilddatasource table by childID
                                     $childData = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $child->childID");
+                                    
+                                    $datasourceName = $childData->childName ?? 'Custom';
                                     echo "<span class='d-flex align-items-center gap-2 mt-2'>
-                                            <b><i class='ph ph-database me-2'></i>Data Source:</b> " . $childData->childName . "
+                                            <b><i class='ph ph-database me-2'></i>Data Source:</b> " . $datasourceName . "
                                         </span>";
 
                                     # print replacement data
@@ -55,7 +69,7 @@ $create_user = get_userdata($template->userID);
                                             <i class="ph ph-database icon-lg p-2"></i>
                                             <div class="d-flex flex-column">
                                                 <span class="fw-bold">
-                                                    <?php echo $childData->childName; ?>
+                                                    <?php echo $datasourceName; ?>
                                                 </span>
                                             </div>
                                         </div>
@@ -70,11 +84,29 @@ $create_user = get_userdata($template->userID);
                                                 $datareplace = json_decode($child->dataReplace);
                                                 
                                                 foreach($datareplace as $key => $value){
+                                                    $type = $value->type;
+                                                    if($type == 'multitext'){
+                                                        $first = $value->first->dataID;
+                                                        $second = $value->second->dataID;
+                                                        $first_datasource = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $first");
+                                                        $second_datasource = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $second");
+
+                                                        $show_value = '
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <i class="ph ph-table icon-md"></i>
+                                                                <span>' . $first_datasource->childName . '</span>
+                                                                <i class="ph ph-flow-arrow icon-md px-3"></i>
+                                                                <i class="ph ph-table icon-md"></i>
+                                                                <span>' . $second_datasource->childName . '</span>
+                                                            </div>';
+                                                    } else {
+                                                        $show_value = $value->field;
+                                                    }
                                                     echo '<div class="replace_field d-flex justify-content-center align-items-center gap-3">
                                                             <i class="ph ph-puzzle-piece icon-md"></i>
                                                             <span class="w300">' . $key . '</span>
                                                             <i class="ph ph-arrow-circle-right icon-md"></i>
-                                                            <span class="w300">' . $value . '</span>
+                                                            <span class="w300">' . $show_value . '</span>
                                                         </div>';
                                                 }
                                             ?>
@@ -85,10 +117,19 @@ $create_user = get_userdata($template->userID);
                             }
                             ?>
                             <!-- Button pull data from $source to header (json format) -->
-                            <div class="form-group d-flex justify-content-left mt-3">
+                            <div class="form-group d-flex justify-content-left mt-3 gap-3">
                                 <a href="<?php echo home_url('/create-document?templateID=') . $templateID; ?>" class="btn btn-info btn-icon-text me-2 d-flex align-items-center">
                                     <span class="mdi mdi-creation-outline btn-icon-prepend fa-150p"></span> Tạo tài liệu từ mẫu này
                                 </a>
+                                <?php 
+                                    # if user is admin, show delete button
+                                    if (current_user_can('administrator')) {
+                                        echo '<a href="' . home_url('/template/?action=delete&templateID=') . $templateID . '" class="btn btn-icon-text me-2 d-flex align-items-center">
+                                                <i class="ph ph-file-x btn-icon-prepend fa-150p"></i> Xóa mẫu này
+                                            </a>';
+                                    }
+                                ?>
+                                
                             </div>
                         </div>
                     </div>

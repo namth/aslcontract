@@ -45,8 +45,63 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
     $data_replace = array();
     foreach ($_POST as $key => $value) {
         if (strpos($key, 'data-') !== false) {
-            $temp_data = explode('#', substr($key, 5));
-            $data_replace[$temp_data[0]][$value] = $temp_data[1];
+            $suffix     = substr($key, 5);
+            $datatype   = $_POST['datatype-' . $suffix];
+            $temp_data  = explode('#', $suffix);
+
+            $data_replace[$temp_data[0]][$value] = [
+                'field' => $temp_data[1],
+                'type'  => $datatype,
+            ];
+        } else if (strpos($key, 'formula_key') !== false) {
+            $formulaid      = substr($key, 12);
+            $tmp_field      = $_POST['formula_key-' . $formulaid];
+            $tmp_formula    = $_POST['formula_value-' . $formulaid];
+
+            $data_replace[0][$tmp_field] = [
+                'field' => $tmp_formula,
+                'type' => 'formula',
+            ];
+        } else if (strpos($key, 'date_key') !== false) {
+            $dateid             = substr($key, 9);
+            $tmp_field          = $_POST['date_key-' . $dateid];
+            $tmp_date_format    = $_POST['date_format-' . $dateid];
+
+            $data_replace[0][$tmp_field] = [
+                'field' => $tmp_date_format,
+                'type' => 'date',
+            ];
+        } else if (strpos($key, 'multi_key') !== false) {
+            $multiblockid       = substr($key, 10);
+            $replace_field      = $_POST['multi_key-' . $multiblockid];
+            $first_datasource   = $_POST['first_datasource-' . $multiblockid];
+            $first_field        = $_POST['first_field-' . $multiblockid];
+            $first_seperator    = $_POST['first_seperator-' . $multiblockid];
+
+            $data_replace[0][$replace_field] = [
+                'first' => [
+                    'dataID'    => $first_datasource,
+                    'field'     => $first_field,
+                    'seperator' => $first_seperator,
+                ],
+                'type' => 'multitext',
+            ];
+
+            $second_datasource  = $_POST['second_datasource-' . $multiblockid];
+            if ($second_datasource) {
+                $second_field       = $_POST['second_field-' . $multiblockid];
+                $second_seperator   = $_POST['second_seperator-' . $multiblockid];
+                $link               = $_POST['link-' . $multiblockid];
+                $seperator          = $_POST['seperator-' . $multiblockid];
+
+                $data_replace[0][$replace_field]['second'] = [
+                    'dataID'    => $second_datasource,
+                    'field'     => $second_field,
+                    'seperator' => $second_seperator
+                ];
+                $data_replace[0][$replace_field]['link'] = $link;
+                $data_replace[0][$replace_field]['seperator'] = $seperator;
+            }
         }
     }
 
@@ -194,8 +249,15 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
                                         </div>
                                         
                                         <div class="d-flex justify-content-center w-100 flex-column gap-3 align-items-center">
-                                            <button id="add_datasource" class="asl-dash-btn btn-inverse-info w-100"><i class="ph ph-plugs icon-md"></i></button>
-                                            <div id="list_datasource" class="justify-content-center w-100 gap-3">
+                                            <div id="datasource_action" class="asl-dash-btn btn-inverse-info d-flex gap-4 w-100 justify-content-center">
+                                                <a href="#" id="add_datasource" class="d-flex nav-link"><i class="ph ph-plugs icon-md"></i></a>
+                                                <a href="#" class="add_formula d-flex nav-link" data-custom="formula"><i class="ph ph-math-operations icon-md"></i></a>
+                                                <a href="#" class="add_formula d-flex nav-link" data-custom="date"><i class="ph ph-calendar-plus icon-md"></i></a>
+                                                <a href="#" class="add_formula d-flex nav-link" data-custom="multiblock"><i class="ph ph-diamonds-four icon-md"></i></a>
+                                                <input type="hidden" name="formula_count" id="formula_count" value="0">
+                                                <input type="hidden" name="multi_datasource">
+                                            </div>
+                                            <div id="list_datasource" class="justify-content-center w-100 gap-3" style="display: none;">
                                                 <?php 
                                                     # get all datasource from database and show here
                                                     $datasources = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}asldatasource");

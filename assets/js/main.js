@@ -27,7 +27,7 @@ jQuery(document).ready(function ($) {
     */
     $('#add_datasource').click(function (e) {
         e.preventDefault();
-        $(this).hide();
+        $('#datasource_action').addClass('hide_important');
         $('#list_datasource').css('display', 'flex');
     });
 
@@ -43,9 +43,9 @@ jQuery(document).ready(function ($) {
         e.preventDefault();
         var childID = $(this).data('childid');
         $('#list_datasource').hide();
-        $('#add_datasource').show();
+        $('#datasource_action').removeClass('hide_important');
 
-        console.log(childID);
+        // console.log(childID);
         $.ajax({
             type: 'POST',
             url: AJAX.ajax_url,
@@ -61,7 +61,125 @@ jQuery(document).ready(function ($) {
             }
         });
     });
+
+    /* 
+    * File: addnew_template.php
+    * Process when click on "#remove_datasource" button
+    * 1. Hide the button
+    * 2. Show the div with id "list_datasource" set to display: flex
+    */
+    $(document).on('click', '#remove_datasource', function (e) {
+        e.preventDefault();
+        var childid = $(this).data('childid');
+        $('#child-' + childid).remove();
+    });
+
+    /* 
+    * File: addnew_template.php
+    * Process when click on "#add_formula" button
+    * 1. No need hide the button
+    * 2. Call ajax to show the form to add new formula
+    */
+    $('.add_formula').click(function (e) {
+        e.preventDefault();
+        var formula_count = $("#formula_count").val();
+        var custom = $(this).data('custom');
+
+        $.ajax({
+            type: 'POST',
+            url: AJAX.ajax_url,
+            data: {
+                action: 'add_formula',
+                formula_count: formula_count,
+                custom: custom
+            },
+            success: function (response) {
+                var obj = JSON.parse(response);
+                $('#replaceArea').append(obj.formula_div);
+                $("#formula_count").val(obj.formula_count);
+            }
+        });
+    });
     
+    /* 
+    * File: addnew_template.php
+    * Process when click on "#remove_formula" button
+    * 1. Decrease the value of input hidden with id "formula_count"
+    * 2. Remove the div with class "data_replace_box"
+    */
+    $(document).on('click', '#remove_formula', function (e) {
+        e.preventDefault();
+        var formula_count = $("#formula_count").val();
+        formula_count = formula_count - 1;
+        $("#formula_count").val(formula_count);
+
+        $(this).closest('.data_replace_box').remove();
+    });
+
+    /* 
+    * File: addnew_template.php
+    * Process when click on ".multiblock" to choose 2 datasource
+    */
+    $(document).on('click', '.multiblock', function (e) {
+        e.preventDefault();
+        var childID = $(this).data('childid');
+        var multi_datasource = $('input[name="multi_datasource"]').val();
+        var multi_datasource_arr = multi_datasource ? multi_datasource.split(',') : [];
+
+        // put childID to multi_datasource_arr, if childID is in multi_datasource_arr, remove it
+        // if number of element in multi_datasource_arr is greater than 2, remove the first element
+        if (multi_datasource_arr.includes(childID.toString())) {
+            var index = multi_datasource_arr.indexOf(childID.toString());
+            if (index > -1) {
+                multi_datasource_arr.splice(index, 1);
+            }
+        } else {
+            if (multi_datasource_arr.length >= 2) {
+                multi_datasource_arr.shift();
+            }
+            multi_datasource_arr.push(childID + '');
+        }
+
+        // remove all element with class "blockselect" in the a tag with class "multiblock"
+        $('.multiblock .blockselect').remove();
+        // append element with class "blockselect" to the a tag with class is "blockid-" + ID (in multi_datasource_arr)
+        multi_datasource_arr.forEach( (item, index) => {
+            var number = index + 1;
+            $('.blockid-' + item).append('<span class="blockselect">' + number + '</span>');
+        });
+
+        // join multi_datasource_arr to string with ',', then set to input hidden name is "multi_datasource"
+        $('input[name="multi_datasource"]').val(multi_datasource_arr.join(','));
+
+    });
+
+    $(document).on('click', '.select_multiblock', function (e) {
+        var formulaID = $(this).data('formula');
+        var multi_datasource = $('input[name="multi_datasource"]').val();
+        // if multi_datasource is empty, return false
+        if (!multi_datasource) {
+            alert('Bạn chưa chọn cơ sở dữ liệu nào');
+            return false;
+        } else {
+            // remove #list_datasource in the div with id "formula-" + formulaID
+            $('#formula-' + formulaID + ' #list_datasource').remove();
+
+            // call ajax to show the datasource are selected
+            $.ajax({
+                type: 'POST',
+                url: AJAX.ajax_url,
+                data: {
+                    action: 'show_multiblock',
+                    multi_datasource: multi_datasource,
+                    formulaID: formulaID
+                },
+                success: function (response) {
+                    $('#formula-' + formulaID).append(response);
+                }
+            });
+        }
+    });
+
     /* 
     * File: addnew_template.php
     * Process when submit the form with id "addnew_template_form"
@@ -122,7 +240,40 @@ jQuery(document).ready(function ($) {
             beforeSend: function () {
                 $this.find('i').hide();
                 $this.find('.loader').show();
-                console.log(childID);
+                // console.log(childID);
+            },
+            success: function (response) {
+                $this.find('i').show();
+                $this.find('.loader').hide();
+                $('#replaceResult_' + childID).html(response);
+            }
+        });
+    });
+
+    /* 
+    * File: create_document.php
+    * Process when click .choose_date to search replace data to create document
+    */
+    $('.choose_date').click(function (e) {
+        e.preventDefault();
+        var $this = $(this);
+        var childID = $(this).data('childid');
+        var selectdate = $('input[name="datareplace_' + childID + '"]').val();
+        var templateID = $('input[name="templateID"]').val();
+        
+        // console.log(selectdate);
+        $.ajax({
+            type: 'POST',
+            url: AJAX.ajax_url,
+            data: {
+                action: 'choose_date',
+                childID: childID,
+                selectdate: selectdate,
+                templateID: templateID
+            },
+            beforeSend: function () {
+                $this.find('i').hide();
+                $this.find('.loader').show();
             },
             success: function (response) {
                 $this.find('i').show();
@@ -145,11 +296,10 @@ jQuery(document).ready(function ($) {
 
         var jsondata = $(this).data('asldata');
         var childid = $(this).data('childid');
+        var templateID = $('input[name="templateID"]').val();
 
         /* hide input search field with class .replace_search */
         $('#replaceSearch_' + childid).addClass('hide_div').hide();
-        /* set value to input hidden name is selectdata */
-        $('input[name="selectdata_' + childid + '"]').val(jsondata);
         
         var ls_dataid = $('input[name="ls_dataid"]').val();
         /* if ls_dataid has value, concatenate childid to this value seperate with ',', if has not, then set childid to that value */
@@ -165,10 +315,17 @@ jQuery(document).ready(function ($) {
             url: AJAX.ajax_url,
             data: {
                 action: 'decrypt_data',
+                templateID: templateID,
+                childid: childid,
                 jsondata: jsondata
             },
             success: function (response) {
-                $('#replaceResult_' + childid).append(response);
+                // console.log(response);
+                var obj = JSON.parse(response);
+                console.log(obj.outputdata);
+                $('#replaceResult_' + childid).append(obj.show);
+                /* set value to input hidden name is selectdata */
+                $('input[name="selectdata_' + childid + '"]').val(obj.outputdata);
             }
         });
 
@@ -197,6 +354,75 @@ jQuery(document).ready(function ($) {
         // join array to string with ',', then set to input hidden name is ls_dataid
         $('input[name="ls_dataid"]').val(ls_dataid_arr.join(','));
         return false;
+    });
+
+
+    /* 
+    * File: create_document.php
+    * Process when click .search_data to search replace data to create document
+    */
+    $(document).on('click', '.search_multidata', function (e) {
+        e.preventDefault();
+        var key     = $(this).data('key');
+        var struct  = $('input[name="struct_' + key + '"]').val();
+        var search  = $('input[name="search_' + key + '"]').val();
+        var $this   = $(this);
+
+        console.log(struct);
+        
+        $.ajax({
+            type: 'POST',
+            url: AJAX.ajax_url,
+            data: {
+                action: 'search_multidata',
+                struct: struct,
+                key: key,
+                search: search
+            },
+            beforeSend: function () {
+                $this.find('i').hide();
+                $this.find('.loader').show();
+                // console.log(childID);
+            },
+            success: function (response) {
+                $this.find('i').show();
+                $this.find('.loader').hide();
+                $this.parents().eq(2).find('#selectResult').html(response);
+            }
+        });
+    });
+
+    /* process when form with id select_multidata_form submited */
+    $(document).on('click', '.multiselect_data', function (e) {
+        e.preventDefault();
+        var multiselect = $(this).data('multiselect');
+        var key         = $(this).data('key');
+        var parentid    = $(this).data('parentid');
+        var struct      = $('input[name="struct_' + key + '"]').val();
+        var currentdata = $('input[name="custom#multidata#' + key + '"]').val();
+        
+        $(this).hide();
+
+
+        $.ajax({
+            type: 'POST',
+            url: AJAX.ajax_url,
+            data: {
+                action: 'select_multidata',
+                multiselect: multiselect,
+                parentid: parentid,
+                currentdata: currentdata,
+                struct: struct
+            },
+            beforeSend: function () {
+                
+            },
+            success: function (response) {
+                var obj = JSON.parse(response);
+                $('input[name="custom#multidata#' + key + '"]').val(obj.outputdata);
+                $('#multiResult_' + key).html(obj.show);
+            }
+        });
     });
 
     /* 

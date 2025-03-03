@@ -13,6 +13,9 @@
 .w90 {
     width: 90px;
 }
+.w110 {
+    width: 110px;
+}
 .w165 {
     width: 165px;
 }
@@ -58,7 +61,7 @@
     padding: 12px 15px;
 }
 #list_datasource {
-    display: none;
+    display: flex;
     border: 1px solid lightgray;
     padding: 20px;
     border-radius: 20px;
@@ -79,6 +82,7 @@
     color: #51b1e1;
 }
 .data_replace_box {
+    position: relative;
     background-color: #ebf3ff;
     border-radius: 20px;
     margin-top: 10px;
@@ -97,7 +101,7 @@
 .replace_search {
     display: flex;
 }
-.search_data .loader {
+.loader {
     display: none;
 }
 .search_data .loader img {
@@ -156,4 +160,26 @@
 }
 .asl-template:hover .asl-template-action {
     display: flex;
+}
+.remove_datasource{
+    display: block;
+    position: absolute;
+    right: 15px;
+    top: 15px;
+}
+.multiblock {
+    position: relative;
+}
+.blockselect {
+    position: absolute;
+    top: 0;
+    left: calc(50% + 10px);
+    background: red;
+    width: 20px;
+    color: white;
+    font-size: 12px;
+    text-align: center;
+    padding: 2px;
+    border-radius: 10px;
+    font-weight: bold;
 }

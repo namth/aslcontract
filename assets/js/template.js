@@ -113,6 +113,7 @@
       $('#datepicker-popup').datepicker({
         enableOnReadonly: true,
         todayHighlight: true,
+        format: 'dd/mm/yyyy',
       });
       $("#datepicker-popup").datepicker("setDate", "0");
     }

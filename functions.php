@@ -329,3 +329,10 @@ function remove_admin_bar() {
         show_admin_bar(false);
     // }
 }
+
+function tinhToanCongThuc($congThuc) {
+    // Tính toán kết quả
+    eval("\$ketQua = (" . $congThuc . ");");
+
+    return $ketQua;
+}

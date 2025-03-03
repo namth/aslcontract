@@ -97,6 +97,10 @@ function google_clone_file($sourceFileId, Google_Service_Drive_File $new_file, $
 
 function google_docs_replaceText($documentId, $replacements)
 {
+    if (empty($replacements)) {
+        return false;
+    }
+
     global $client;
 
     $service = new Google_Service_Docs($client);
@@ -116,6 +120,8 @@ function google_docs_replaceText($documentId, $replacements)
         ));
     }
 
+    // return $requests;
+
     $batchUpdateRequest = new Google_Service_Docs_BatchUpdateDocumentRequest(array(
         'requests' => $requests
     ));
@@ -127,7 +133,7 @@ function google_docs_replaceText($documentId, $replacements)
 /* 
  * Hàm chèn hình ảnh vào Google Docs
  */
-function insertImageIntoGoogleDoc($fileId, $imageUrl, $textToReplace = '{your_image}')
+function insertImageIntoGoogleDoc($fileId, $img_replacements)
 {
     global $client; // Biến $client được định nghĩa ở bước xác thực
     $found = false;
@@ -143,29 +149,31 @@ function insertImageIntoGoogleDoc($fileId, $imageUrl, $textToReplace = '{your_im
             foreach ($structuralElement->paragraph->elements as $paragraphElement) {
                 if ($paragraphElement->textRun) {
                     $text = $paragraphElement->textRun->content;
-                    if (strpos($text, $textToReplace) !== false) {
-                        $startIndex = $paragraphElement->startIndex;
-                        $found = true;
-
-                        // 4. Xóa văn bản cần thay thế ( nếu tìm thấy)
-                        $requests[] = new Google_Service_Docs_Request(array(
-                            'deleteContentRange' => [
-                                'range' => [
-                                    'startIndex' => $startIndex,
-                                    'endIndex' => $startIndex + strlen($textToReplace),
+                    foreach ($img_replacements as $textToReplace => $imageUrl) {
+                        if (strpos($text, $textToReplace) !== false) {
+                            $startIndex = $paragraphElement->startIndex;
+                            $found = true;
+    
+                            // 4. Xóa văn bản cần thay thế ( nếu tìm thấy)
+                            $requests[] = new Google_Service_Docs_Request(array(
+                                'deleteContentRange' => [
+                                    'range' => [
+                                        'startIndex' => $startIndex,
+                                        'endIndex' => $startIndex + strlen($textToReplace),
+                                    ],
                                 ],
-                            ],
-                        ));
-
-                        // 5. Chèn hình ảnh
-                        $requests[] = new Google_Service_Docs_Request(array(
-                            'insertInlineImage' => array(
-                                'uri' => $imageUrl,
-                                'location' => array(
-                                    'index' => $startIndex,
+                            ));
+    
+                            // 5. Chèn hình ảnh
+                            $requests[] = new Google_Service_Docs_Request(array(
+                                'insertInlineImage' => array(
+                                    'uri' => $imageUrl,
+                                    'location' => array(
+                                        'index' => $startIndex,
+                                    )
                                 )
-                            )
-                        ));
+                            ));
+                        }
                     }
                 }
             }
@@ -177,29 +185,31 @@ function insertImageIntoGoogleDoc($fileId, $imageUrl, $textToReplace = '{your_im
                             foreach ($content->paragraph->elements as $paragraphElement) {
                                 if ($paragraphElement->textRun) {
                                     $text = $paragraphElement->textRun->content;
-                                    if (strpos($text, $textToReplace) !== false) {
-                                        $startIndex = $paragraphElement->startIndex;
-                                        $found = true;
+                                    foreach ($img_replacements as $textToReplace => $imageUrl) {
+                                        if (strpos($text, $textToReplace) !== false) {
+                                            $startIndex = $paragraphElement->startIndex;
+                                            $found = true;
 
-                                        // 4. Xóa văn bản cần thay thế ( nếu tìm thấy)
-                                        $requests[] = new Google_Service_Docs_Request(array(
-                                            'deleteContentRange' => [
-                                                'range' => [
-                                                    'startIndex' => $startIndex,
-                                                    'endIndex' => $startIndex + strlen($textToReplace),
+                                            // 4. Xóa văn bản cần thay thế ( nếu tìm thấy)
+                                            $requests[] = new Google_Service_Docs_Request(array(
+                                                'deleteContentRange' => [
+                                                    'range' => [
+                                                        'startIndex' => $startIndex,
+                                                        'endIndex' => $startIndex + strlen($textToReplace),
+                                                    ],
                                                 ],
-                                            ],
-                                        ));
+                                            ));
 
-                                        // 5. Chèn hình ảnh
-                                        $requests[] = new Google_Service_Docs_Request(array(
-                                            'insertInlineImage' => array(
-                                                'uri' => $imageUrl,
-                                                'location' => array(
-                                                    'index' => $startIndex,
+                                            // 5. Chèn hình ảnh
+                                            $requests[] = new Google_Service_Docs_Request(array(
+                                                'insertInlineImage' => array(
+                                                    'uri' => $imageUrl,
+                                                    'location' => array(
+                                                        'index' => $startIndex,
+                                                    )
                                                 )
-                                            )
-                                        ));
+                                            ));
+                                        }
                                     }
                                 }
                             }
@@ -209,6 +219,8 @@ function insertImageIntoGoogleDoc($fileId, $imageUrl, $textToReplace = '{your_im
             }
         }
     }
+
+    // return $requests;
 
     // 3. Xử lý trường hợp không tìm thấy văn bản
     if ($startIndex === null) {
@@ -223,8 +235,6 @@ function insertImageIntoGoogleDoc($fileId, $imageUrl, $textToReplace = '{your_im
 
         $result = $service->documents->batchUpdate($fileId, $batchUpdateRequest);
     }
-
-
 
     return ['success' => true, 'message' => 'Hình ảnh đã được chèn'];
 }

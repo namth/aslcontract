@@ -18,74 +18,59 @@ if (!$templateID) {
     $template = $wpdb->get_row("SELECT * FROM $table_name WHERE templateID = $templateID");
 }
 
-/* 
-validate form data and create new contract
-*/
-// if (isset($_POST['post_contract_field']) && wp_verify_nonce($_POST['post_contract_field'], 'post_contract')) {
-//     # get post data
-//     $newfilename = $_POST['contract_name'];
-//     $ls_dataid = explode(',', $_POST['ls_dataid']);
-//     $sourceFileId = $template->gFileID;
-//     $folderId = $template->gDestinationFolderID;
+# process post data
+// if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+//     if (isset($_POST['post_contract_field'])) {
+//         $contract_name = $_POST['contract_name'];
+//         $ls_dataid = explode(',', $_POST['ls_dataid']);
+//         $templateID = $_POST['templateID'];
+//         $template = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltemplate WHERE templateID = $templateID");
+//         $sourceFileId = $template->gFileID;
+//         $folderId = $template->gDestinationFolderID;
+//         $current_user = wp_get_current_user();
 
-//     # if !empty $ls_dataid, get replace data from aslreplacements table
-//     if (!empty($ls_dataid)) {
-//         $replacements = [];
-//         foreach ($ls_dataid as $childID) {
-//             # get data_replace from post data
-//             $data_replace = json_decode(asl_encrypt($_POST['selectdata_' . $childID], 'd'));
+//         if (!empty($ls_dataid)) {
+//             $replacements = [];
+//             $img_replacements = [];
+//             foreach ($ls_dataid as $childID) {
+//                 # get data_replace from post data
+//                 $selectdata = $_POST['selectdata_' . $childID];
+//                 if ($selectdata) {
+//                     $data_replace = json_decode(asl_encrypt($_POST['selectdata_' . $childID], 'd'));
 
-//             // print_r($data_replace->name);
-//             # get replacement data from aslreplacement table by childID and templateID
-//             $replacement = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslreplacement WHERE templateID = $templateID AND childID = $childID");
+//                     foreach ($data_replace as $key => $value) {
+//                         $field = $value->field;
+//                         $type = $value->type;
+//                         echo $field;
+//                         switch ($type) {
+//                             case 'img':
+//                                 $img_replacements[$key] = $field;
+//                                 break;
 
-//             # if have replacement data, decode it and replace value in $data_replace
-//             if ($replacement) {
-//                 $replacement = json_decode($replacement->dataReplace, true);
-//                 foreach ($replacement as $key => $value) {
-//                     $replacement[$key] = $data_replace->$value;
+//                             case 'number':
+//                                 if (is_numeric($field)) {
+//                                     $replacements[$key] = number_format($field);
+//                                 } else {
+//                                     $replacements[$key] = $field;
+//                                 }
+//                                 break;
+                            
+//                             default:
+//                                 $replacements[$key] = $field;
+//                                 break;
+//                         }
+//                     }
 //                 }
-//                 $replacements = array_merge($replacements, $replacement);
 //             }
 //         }
-//     }
-
-//     // Load credentials from file
-//     // $client = new Google_Client();
-//     // $client->setApplicationName("ASL Contract");
-//     // $client->addScope(Google_Service_Drive::DRIVE);
-//     // $client->setAccessType('offline');
-//     // $client->setAuthConfig(__DIR__ . '/asl-contract-01fd683a00f9.json');
-
-//     # replace newfilename with all data in $replacements
-//     $newfilename = str_replace(array_keys($replacements), array_values($replacements), $newfilename);
-
-//     /* Clone docs file from source template file */
-//     $new_file = new Google_Service_Drive_File();
-//     $optParams = array(
-//         'folderId' => $folderId,
-//         'newfilename' => $newfilename,
-//     );
-//     $copyfileID = google_clone_file($sourceFileId, $new_file, $optParams);
+        
+//         # replace newfilename with all data in $data_replace
+//         $newfilename = str_replace(array_keys($replacements), array_values($replacements), $newfilename);
     
-//     # if clone file success, add result to database and replace text in file with $replacements
-//     if ($copyfileID) {
-//         # add result to database: asldocument table
-//         $table_name = $wpdb->prefix . 'asldocument';
-//         $wpdb->insert($table_name, [
-//             'templateID' => $templateID,
-//             'userID' => get_current_user_id(),
-//             'documentName' => $newfilename,
-//             'gFileID' => $copyfileID,
-//             'gDestinationFolderID' => $folderId,
-//             'documentModified' => current_time('mysql'),
-//         ]);
 
-//         $notification = 'Tạo file thành công. File ID: ' . $copyfileID;
-    
-//         $result = google_docs_replaceText($copyfileID, $replacements);    
-//     } else {
-//         $notification =  "Clone thất bại";
+//         print_r($replacements);
+//         print_r($img_replacements);
+//         $notification = '<div class="alert alert-success" role="alert">Tạo tài liệu thành công</div>';
 //     }
 // }
 
@@ -136,12 +121,16 @@ validate form data and create new contract
                                 # get child data source and replacement data from aslreplacement table
                                 $childs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}aslreplacement WHERE templateID = $templateID");
                                 if ($childs) {
-                                    foreach ($childs as $child) {
+                                    foreach ($childs as $key => $child) {
+                                        if ($child->childID == 0) {
+                                            continue;
+                                        }
                                         # get childName from aslchilddatasource table by childID
                                         $childData = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $child->childID");
                                         
+                                        $system = ['date', 'time'];
                                         # print replacement data
-                                        if ($childData) {
+                                        if ($childData && !in_array($childData->api, $system)) {
                                         ?>
                                         <div class="data_replace_box d-flex align-items-center gap-4 fit-content">
                                             <div class="d-flex justify-content-center flex-column text-center">
@@ -166,7 +155,114 @@ validate form data and create new contract
                                             </div>
                                         </div>
                                         <?php
-                                        }                                        
+                                        }
+
+                                        # print system data
+                                        if ($childData && $childData->api == 'date') {
+                                        ?>
+                                        <div class="data_replace_box d-flex align-items-center gap-4 fit-content">
+                                            <div class="d-flex justify-content-center flex-column text-center">
+                                                <i class="ph ph-database icon-lg p-2"></i>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-bold">
+                                                        <?php echo $childData->childName; ?>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="replace_area d-flex align-items-center flex-column justify-content-center">
+                                                <div class="replace_search justify-content-center align-items-center p-2 gap-3" id="replaceSearch_<?php echo $child->childID; ?>">
+                                                    <i class="ph ph-puzzle-piece icon-md"></i>
+                                                    <div id="datepicker-popup" class="input-group date datepicker navbar-date-picker">
+                                                        <span class="input-group-addon input-group-prepend border-right">
+                                                            <span class="icon-calendar input-group-text calendar-icon"></span>
+                                                        </span>
+                                                        <input type="text" class="form-control" name="datareplace_<?php echo $child->childID; ?>">
+                                                    </div>
+                                                    <input type="hidden" name="selectdata_<?php echo $child->childID; ?>">
+                                                    <a class="choose_date nav-link border-none p-1" data-childid="<?php echo $child->childID; ?>">
+                                                        <i class="ph ph-check fa-150p"></i>
+                                                        <span class="loader"><img src="<?php echo get_template_directory_uri() . "/assets/images/loader.gif"; ?>" alt="" width="24"></span>
+                                                    </a>
+                                                </div>
+                                                <div id="replaceResult_<?php echo $child->childID; ?>" class="replace_result"></div>
+                                            </div>
+                                        </div>
+                                        <?php
+                                        }
+
+                                        # pop out data from $childs
+                                        unset($childs[$key]);
+                                    }
+
+                                    # show all the custom data
+                                    $data_replace = json_decode($childs[0]->dataReplace);
+                                    // print_r($data_replace);
+                                    foreach ($data_replace as $key => $replace_arr) {
+                                        $type = $replace_arr->type;
+                                        if ($type == 'date') {
+                                            $format = $replace_arr->field;
+                                        ?>
+                                        <div class="data_replace_box d-flex align-items-center gap-4 fit-content">
+                                            <div class="d-flex justify-content-center flex-column text-center">
+                                                <i class="ph ph-calendar icon-lg p-2"></i>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-bold">
+                                                        <?php echo $key; ?>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="replace_area d-flex align-items-center flex-column justify-content-center">
+                                                <div class="replace_search justify-content-center align-items-center p-2 gap-3" id="replaceSearch_<?php echo $child->childID; ?>">
+                                                    <i class="ph ph-puzzle-piece icon-md"></i>
+                                                    <div id="datepicker-popup" class="input-group date datepicker navbar-date-picker">
+                                                        <span class="input-group-addon input-group-prepend border-right">
+                                                            <span class="icon-calendar input-group-text calendar-icon"></span>
+                                                        </span>
+                                                        <input type="text" class="form-control" name="custom#date#<?php echo $key; ?>">
+                                                    </div>
+                                                    <input type="hidden" name="format_<?php echo $key; ?>" value="<?php echo $format; ?>">
+                                                </div>
+                                                <div id="replaceResult_<?php echo $child->childID; ?>" class="replace_result"></div>
+                                            </div>
+                                        </div>
+                                        <?php
+                                        } else if ($type == 'multitext') {
+                                            $newkey = str_replace(array('{', '}'), '', $key);
+                                            $struct = asl_encrypt(json_encode($replace_arr));
+                                            ?>
+                                            <div class="data_replace_box d-flex align-items-center gap-4 fit-content">
+                                                <div class="d-flex justify-content-center flex-column text-center">
+                                                    <i class="ph ph-diamonds-four icon-lg p-2"></i>
+                                                    <div class="d-flex flex-column">
+                                                        <span class="fw-bold">
+                                                            <?php echo $newkey; ?>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="replace_area d-flex align-items-center flex-column justify-content-center">
+                                                    <div id="multiResult_<?php echo $newkey; ?>" class=""></div>
+                                                    <div class="replace_search justify-content-center align-items-center p-2 gap-3" id="replaceSearch_<?php echo $newkey; ?>">
+                                                        <i class="ph ph-puzzle-piece icon-md"></i>
+                                                        <input type="text" class="form-control" name="search_<?php echo $newkey; ?>">
+                                                        <input type="hidden" name="custom#multidata#<?php echo $newkey; ?>">
+                                                        <input type="hidden" name="key_<?php echo $newkey; ?>" value="<?php echo $key; ?>">
+                                                        <input type="hidden" name="struct_<?php echo $newkey; ?>" value="<?php echo $struct; ?>">
+                                                        <a class="search_multidata nav-link border-none p-1" data-key="<?php echo $newkey; ?>">
+                                                            <i class="ph ph-magnifying-glass fa-150p"></i>
+                                                            <span class="loader"><img src="<?php echo get_template_directory_uri() . "/assets/images/loader.gif"; ?>" alt="" width="24"></span>
+                                                        </a>
+                                                    </div>
+                                                    <div id="selectResult" class="replace_result"></div>
+                                                </div>
+                                            </div>
+                                            <?php
+                                        } else if ($type == 'formula') {
+                                            ?>
+                                            <div>
+                                                <input type="hidden" name="custom#formula#<?php echo $key; ?>" value="<?php echo $replace_arr->field; ?>">
+                                            </div>
+                                            <?php
+                                        }
                                     }
                                 }
                                 wp_nonce_field('post_contract', 'post_contract_field');
