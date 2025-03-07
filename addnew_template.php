@@ -55,22 +55,32 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
             ];
         } else if (strpos($key, 'formula_key') !== false) {
             $formulaid      = substr($key, 12);
-            $tmp_field      = $_POST['formula_key-' . $formulaid];
+            // $tmp_field      = $_POST['formula_key-' . $formulaid];
             $tmp_formula    = $_POST['formula_value-' . $formulaid];
 
-            $data_replace[0][$tmp_field] = [
+            $data_replace[0][$value] = [
                 'field' => $tmp_formula,
                 'type' => 'formula',
             ];
         } else if (strpos($key, 'date_key') !== false) {
             $dateid             = substr($key, 9);
-            $tmp_field          = $_POST['date_key-' . $dateid];
+            // $tmp_field          = $_POST['date_key-' . $dateid];
             $tmp_date_format    = $_POST['date_format-' . $dateid];
 
-            $data_replace[0][$tmp_field] = [
+            $data_replace[0][$value] = [
                 'field' => $tmp_date_format,
                 'type' => 'date',
             ];
+        } else if (strpos($key, 'blank_key') !== false) {
+            $blankid    = substr($key, 10);
+            $type       = $_POST['blank_type-' . $blankid];
+            $default    = $_POST['blank_default-' . $blankid];
+
+            $data_replace[0][$value] = [
+                'type' => $type,
+                'default' => $default,
+            ];
+
         } else if (strpos($key, 'multi_key') !== false) {
             $multiblockid       = substr($key, 10);
             $replace_field      = $_POST['multi_key-' . $multiblockid];
@@ -249,10 +259,11 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
                                         </div>
                                         
                                         <div class="d-flex justify-content-center w-100 flex-column gap-3 align-items-center">
-                                            <div id="datasource_action" class="asl-dash-btn btn-inverse-info d-flex gap-4 w-100 justify-content-center">
+                                            <div id="datasource_action" class="asl-dash-btn btn-inverse-info d-flex gap-5 w-100 justify-content-center">
                                                 <a href="#" id="add_datasource" class="d-flex nav-link"><i class="ph ph-plugs icon-md"></i></a>
                                                 <a href="#" class="add_formula d-flex nav-link" data-custom="formula"><i class="ph ph-math-operations icon-md"></i></a>
                                                 <a href="#" class="add_formula d-flex nav-link" data-custom="date"><i class="ph ph-calendar-plus icon-md"></i></a>
+                                                <a href="#" class="add_formula d-flex nav-link" data-custom="blank"><i class="ph ph-align-left-simple icon-md"></i></a>
                                                 <a href="#" class="add_formula d-flex nav-link" data-custom="multiblock"><i class="ph ph-diamonds-four icon-md"></i></a>
                                                 <input type="hidden" name="formula_count" id="formula_count" value="0">
                                                 <input type="hidden" name="multi_datasource">

@@ -282,7 +282,7 @@ function getGoogleClient(){
     $client->setApplicationName("ASL Contract");
     $client->addScope(Google_Service_Drive::DRIVE);
     $client->setAccessType('offline');
-    $client->setAuthConfig(ABSPATH . '/asl-contract-01fd683a00f9.json');
+    $client->setAuthConfig(ABSPATH . GG_JSON_API_FILE);
     return $client;
 }
 add_action('init', 'getGoogleClient');
@@ -325,14 +325,5 @@ function get_manager_ids($userID) {
 # hide admin bar for all users except admin
 add_action('after_setup_theme', 'remove_admin_bar');
 function remove_admin_bar() {
-    // if (!current_user_can('administrator') && !is_admin()) {
         show_admin_bar(false);
-    // }
-}
-
-function tinhToanCongThuc($congThuc) {
-    // Tính toán kết quả
-    eval("\$ketQua = (" . $congThuc . ");");
-
-    return $ketQua;
 }

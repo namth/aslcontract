@@ -181,6 +181,16 @@ jQuery(document).ready(function ($) {
     });
 
     /* 
+    * File: addnew_template.php, ajax select data to replace
+    * Remove field when click to .remove_field link
+    */
+    $(document).on('click', '.remove_field', function (e) {
+        e.preventDefault();
+        // remove parent of this element
+        $(this).parent().remove();
+    });
+
+    /* 
     * File: addnew_template.php
     * Process when submit the form with id "addnew_template_form"
     */
@@ -254,34 +264,34 @@ jQuery(document).ready(function ($) {
     * File: create_document.php
     * Process when click .choose_date to search replace data to create document
     */
-    $('.choose_date').click(function (e) {
-        e.preventDefault();
-        var $this = $(this);
-        var childID = $(this).data('childid');
-        var selectdate = $('input[name="datareplace_' + childID + '"]').val();
-        var templateID = $('input[name="templateID"]').val();
+    // $('.choose_date').click(function (e) {
+    //     e.preventDefault();
+    //     var $this = $(this);
+    //     var childID = $(this).data('childid');
+    //     var selectdate = $('input[name="datareplace_' + childID + '"]').val();
+    //     var templateID = $('input[name="templateID"]').val();
         
-        // console.log(selectdate);
-        $.ajax({
-            type: 'POST',
-            url: AJAX.ajax_url,
-            data: {
-                action: 'choose_date',
-                childID: childID,
-                selectdate: selectdate,
-                templateID: templateID
-            },
-            beforeSend: function () {
-                $this.find('i').hide();
-                $this.find('.loader').show();
-            },
-            success: function (response) {
-                $this.find('i').show();
-                $this.find('.loader').hide();
-                $('#replaceResult_' + childID).html(response);
-            }
-        });
-    });
+    //     // console.log(selectdate);
+    //     $.ajax({
+    //         type: 'POST',
+    //         url: AJAX.ajax_url,
+    //         data: {
+    //             action: 'choose_date',
+    //             childID: childID,
+    //             selectdate: selectdate,
+    //             templateID: templateID
+    //         },
+    //         beforeSend: function () {
+    //             $this.find('i').hide();
+    //             $this.find('.loader').show();
+    //         },
+    //         success: function (response) {
+    //             $this.find('i').show();
+    //             $this.find('.loader').hide();
+    //             $('#replaceResult_' + childID).html(response);
+    //         }
+    //     });
+    // });
 
     /*
     * File: create_document.php

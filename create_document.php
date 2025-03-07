@@ -128,9 +128,9 @@ if (!$templateID) {
                                         # get childName from aslchilddatasource table by childID
                                         $childData = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $child->childID");
                                         
-                                        $system = ['date', 'time'];
+                                        // $system = ['date', 'time'];
                                         # print replacement data
-                                        if ($childData && !in_array($childData->api, $system)) {
+                                        if ($childData) {
                                         ?>
                                         <div class="data_replace_box d-flex align-items-center gap-4 fit-content">
                                             <div class="d-flex justify-content-center flex-column text-center">
@@ -158,7 +158,7 @@ if (!$templateID) {
                                         }
 
                                         # print system data
-                                        if ($childData && $childData->api == 'date') {
+                                        /* if ($childData && $childData->api == 'date') {
                                         ?>
                                         <div class="data_replace_box d-flex align-items-center gap-4 fit-content">
                                             <div class="d-flex justify-content-center flex-column text-center">
@@ -188,7 +188,7 @@ if (!$templateID) {
                                             </div>
                                         </div>
                                         <?php
-                                        }
+                                        } */
 
                                         # pop out data from $childs
                                         unset($childs[$key]);
@@ -199,6 +199,7 @@ if (!$templateID) {
                                     // print_r($data_replace);
                                     foreach ($data_replace as $key => $replace_arr) {
                                         $type = $replace_arr->type;
+                                        $newkey = str_replace(array('{', '}'), '', $key);
                                         if ($type == 'date') {
                                             $format = $replace_arr->field;
                                         ?>
@@ -207,12 +208,12 @@ if (!$templateID) {
                                                 <i class="ph ph-calendar icon-lg p-2"></i>
                                                 <div class="d-flex flex-column">
                                                     <span class="fw-bold">
-                                                        <?php echo $key; ?>
+                                                        <?php echo $newkey; ?>
                                                     </span>
                                                 </div>
                                             </div>
                                             <div class="replace_area d-flex align-items-center flex-column justify-content-center">
-                                                <div class="replace_search justify-content-center align-items-center p-2 gap-3" id="replaceSearch_<?php echo $child->childID; ?>">
+                                                <div class="replace_search justify-content-center align-items-center p-2 gap-3" id="replaceSearch_<?php echo $newkey; ?>">
                                                     <i class="ph ph-puzzle-piece icon-md"></i>
                                                     <div id="datepicker-popup" class="input-group date datepicker navbar-date-picker">
                                                         <span class="input-group-addon input-group-prepend border-right">
@@ -227,7 +228,6 @@ if (!$templateID) {
                                         </div>
                                         <?php
                                         } else if ($type == 'multitext') {
-                                            $newkey = str_replace(array('{', '}'), '', $key);
                                             $struct = asl_encrypt(json_encode($replace_arr));
                                             ?>
                                             <div class="data_replace_box d-flex align-items-center gap-4 fit-content">
@@ -257,9 +257,25 @@ if (!$templateID) {
                                             </div>
                                             <?php
                                         } else if ($type == 'formula') {
+                                            echo '<input type="hidden" name="custom#formula#' . $key . '" value="' . $replace_arr->field . '">';
+                                        } else {
+                                            $default = $replace_arr->default;
                                             ?>
-                                            <div>
-                                                <input type="hidden" name="custom#formula#<?php echo $key; ?>" value="<?php echo $replace_arr->field; ?>">
+                                            <div class="data_replace_box d-flex align-items-center gap-4 fit-content">
+                                                <div class="d-flex justify-content-center flex-column text-center">
+                                                    <i class="ph ph-database icon-lg p-2"></i>
+                                                    <div class="d-flex flex-column">
+                                                        <span class="fw-bold">
+                                                            <?php echo $newkey; ?>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="replace_area d-flex align-items-center flex-column justify-content-center">
+                                                    <div class="replace_search justify-content-center align-items-center p-2 gap-3" id="replaceSearch_<?php echo $newkey; ?>">
+                                                        <i class="ph ph-puzzle-piece icon-md"></i>
+                                                        <input type="text" class="form-control" name="<?php echo "custom#" . $type . "#" . $key; ?>" value="<?php echo $default; ?>">
+                                                    </div>
+                                                </div>
                                             </div>
                                             <?php
                                         }

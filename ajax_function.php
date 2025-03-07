@@ -11,6 +11,7 @@ use Google\Service\Docs as Google_Service_Docs;
 use Google\Service\Docs\SubstringMatchCriteria as Google_Service_SubstringMatchCriteria;
 use Google\Service\Docs\Request as Google_Service_Docs_Request;
 use Google\Service\Docs\BatchUpdateDocumentRequest as Google_Service_Docs_BatchUpdateDocumentRequest;
+use PHPViet\NumberToWords\Transformer;
 
 
 add_action('wp_ajax_get_datasource', 'get_datasource');
@@ -55,7 +56,10 @@ function get_datasource(){
                                     <option value="img">Image URL</option>
                                     <option value="number">Number</option>
                                 </select>
-                                <input type="text" class="form-control w300" name="data-' . $childID . '#' . $value . '" value="{' . $value . '}">
+                                <input type="text" class="form-control w268" name="data-' . $childID . '#' . $value . '" value="{' . $value . '}">
+                                <a class="remove_field nav-link text-danger" href="#">
+                                    <i class="ph ph-trash"></i>
+                                </a>
                             </div>';
                     }
                 ?>
@@ -112,8 +116,29 @@ function add_formula() {
                     <a id="remove_formula" class="remove_datasource nav-link" href="#">
                         <i class="ph ph-x icon-md"></i>
                     </a>
-                </div>
-            ';
+                </div>';
+            break;
+
+        case 'blank':
+            $formula_div = '
+                <div class="data_replace_box d-flex align-items-center justify-content-center gap-4 w-100" id="formula-' . $formula_count . '">
+                    <div class="replace_area d-flex align-items-center flex-column justify-content-center gap-3">
+                        <div class="replace_field d-flex justify-content-center align-items-center p-2 gap-3">
+                            <i class="ph ph-brackets-curly icon-md"></i>
+                            <input type="text" class="form-control w198" name="blank_key-' . $formula_count . '" placeholder="Nhập từ khóa sẽ thay thế trong file" value="{blank_' . $formula_count . '}">
+                            <i class="ph ph-article-ny-times icon-md"></i>
+                            <select class="js-example-basic-single w110" id="type" name="blank_type-' . $formula_count . '">
+                                <option value="text">Text</option>
+                                <option value="img">Image URL</option>
+                                <option value="number">Number</option>
+                            </select>
+                            <input type="text" class="form-control w315" name="blank_default-' . $formula_count . '" placeholder="Nhập nội dung mặc định">
+                        </div>
+                    </div>
+                    <a id="remove_formula" class="remove_datasource nav-link" href="#">
+                        <i class="ph ph-x icon-md"></i>
+                    </a>
+                </div>';
             break;
 
         case 'multiblock':
@@ -254,7 +279,7 @@ function show_multiblock(){
 /* 
 * File: main.js, create_document.php
 */
-add_action('wp_ajax_choose_date', 'choose_date');
+/* add_action('wp_ajax_choose_date', 'choose_date');
 
 function choose_date(){
     global $wpdb;
@@ -308,7 +333,7 @@ function choose_date(){
         echo '<div class="alert alert-danger d-flex align-items-center" role="alert"><i class="ph ph-funnel-x me-2 fa-150p"></i> Không tìm thấy dữ liệu</div>';
     }
     exit;
-}
+} */
 
 
 /* 
@@ -534,6 +559,7 @@ function create_document() {
         $sourceFileId = $template->gFileID;
         $folderId = $template->gDestinationFolderID;
         $current_user = wp_get_current_user();
+        $transformer = new Transformer();
     
         # if !empty $ls_dataid, get replace data from aslreplacements table
         if (!empty($ls_dataid)) {
@@ -558,6 +584,7 @@ function create_document() {
                             case 'number':
                                 if (is_numeric($field)) {
                                     $replacements[$key] = number_format($field);
+                                    $replacements[$key . '_text'] = $transformer->toWords($field);
                                 } else {
                                     $replacements[$key] = $field;
                                 }
@@ -584,7 +611,9 @@ function create_document() {
                     case 'formula':
                         $congthuc = str_replace(array_keys($replacements), array_values($replacements), $value);
                         $replacevalue = eval('return ' . $congthuc . ';');
-                        $replacements[$newkey] = $replacevalue;
+                        $replacements[$newkey] = number_format($replacevalue);
+
+                        $replacements[$newkey . '_text'] = $transformer->toWords($replacevalue);
                         break;
 
                     case 'date':
@@ -600,6 +629,24 @@ function create_document() {
                         $struct     = json_decode(asl_encrypt($_POST['struct_' . $newkey], 'd'));
                         $replacevalue = process_multidata($struct, $multi_data);
                         $replacements[$replacekey] = $replacevalue;
+                        break;
+
+                    case 'img':
+                        $img_replacements[$newkey] = $value;
+                        break;
+
+                    case 'number':
+                        if (is_numeric($value)) {
+                            $replacements[$newkey] = number_format($value);
+                            $replacements[$newkey . '_text'] = $transformer->toWords($value);
+                        } else {
+                            $replacements[$newkey] = $value;
+                        }
+                        break;
+                    
+                    default:
+                        $tmp_value = str_replace(array_keys($replacements), array_values($replacements), $value);
+                        $replacements[$newkey] = $tmp_value;
                         break;
                 }
             }
