@@ -192,3 +192,10 @@
     border-radius: 4px;
     padding: 9px;
 }
+.replace_field .select2-selection.select2-selection--single {
+    padding: 0.4rem !important;
+}
+.form-group label {
+    font-weight: bold;
+    color: #003966;
+}

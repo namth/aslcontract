@@ -314,11 +314,11 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
                                     <div class="statistics-details d-flex flex-row gap-3 flex-wrap">
                                         
                                         <div class="d-flex justify-content-center align-items-center w-100 gap-3">
-                                            <label for="googleFolderID" class="w165 text-right">Google Folder ID</label>
+                                            <label for="googleFolderID" class="w165 text-right">Google Folder ID (Thư mục đích)</label>
                                             <input type="text" class="form-control mw300" id="googleFolderID" name="googleFolderID">
                                         </div>
                                         <div class="d-flex justify-content-center align-items-center w-100 gap-3">
-                                            <label for="gDestinationFilename" class="w165 text-right">Mẫu tên file</label>
+                                            <label for="gDestinationFilename" class="w165 text-right">Tên file sau khi tạo tự động</label>
                                             <input type="text" class="form-control mw300" id="gDestinationFilename" name="gDestinationFilename">
                                         </div>
 

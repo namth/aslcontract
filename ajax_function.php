@@ -200,12 +200,28 @@ function show_multiblock(){
     global $wpdb;
     $multi_datasource = explode(',', $_POST['multi_datasource']);
     $formula_count = $_POST['formulaID'];
+    $firstID = array_shift($multi_datasource);
+    $secondID = array_shift($multi_datasource);
+    $current_data = new stdClass();
+    echo_multiblock($formula_count, $firstID, $secondID, $current_data);
+    
+    exit;
+}
+
+function echo_multiblock($formula_count, $firstID, $secondID, object $current_data ) {
+    global $wpdb;
+    $first_field        = isset($current_data->first->field) ? $current_data->first->field : '';
+    $first_seperator    = isset($current_data->first->seperator) ? $current_data->first->seperator : 'PHP_EOL';
+    $second_field       = isset($current_data->second->field) ? $current_data->second->field : '';
+    $second_seperator   = isset($current_data->second->seperator) ? $current_data->second->seperator : ', ';
+    $seperator          = isset($current_data->seperator) ? $current_data->seperator : ' : ';
+    $link               = isset($current_data->link) ? $current_data->link : '';
+    
     echo '<div class="d-flex align-items-center justify-content-center gap-4 w-100">
             <div class="d-flex align-items-center justify-content-center gap-3">';
     # get the first item in $multi_datasource and remove it from $multi_datasource
-    $childID = array_shift($multi_datasource);
     $table_name = $wpdb->prefix . 'aslchilddatasource';
-    $childdatasource = $wpdb->get_row("SELECT * FROM $table_name WHERE childID = $childID");
+    $childdatasource = $wpdb->get_row("SELECT * FROM $table_name WHERE childID = $firstID");
     echo '<div id="first" class="replace_area d-flex justify-content-center align-items-center flex-column p-4 gap-3">
             <div class="d-flex justify-content-center align-items-center gap-3">
                 <i class="ph ph-database icon-md"></i>
@@ -221,28 +237,26 @@ function show_multiblock(){
     echo '</div>';
     echo '  <div class="d-flex justify-content-center align-items-center gap-3">
                 <i class="ph ph-brackets-curly icon-md"></i>
-                <input type="text" class="form-control w198" name="first_field-' . $formula_count . '" placeholder="Nhập vào trường dữ liệu sẽ lấy">
+                <input type="text" class="form-control w198" name="first_field-' . $formula_count . '" placeholder="Nhập vào trường dữ liệu sẽ lấy" value="' . $first_field . '">
             </div>
             <div class="d-flex justify-content-center align-items-center gap-3">
                 <i class="ph ph-git-commit icon-md"></i>
-                <input type="text" class="form-control w198" name="first_seperator-' . $formula_count . '" placeholder="Nhập ký tự phân cách" value="PHP_EOL">
+                <input type="text" class="form-control w198" name="first_seperator-' . $formula_count . '" placeholder="Nhập ký tự phân cách" value="' . $first_seperator . '">
             </div>';
-    echo '  <input type="hidden" name="first_datasource-' . $formula_count . '" value="' . $childID . '">
+    echo '  <input type="hidden" name="first_datasource-' . $formula_count . '" value="' . $firstID . '">
         </div>';
 
     # get the second item in $multi_datasource (if have) and remove it from $multi_datasource
-    if(!empty($multi_datasource)){
-        $childID = array_shift($multi_datasource);
-        $table_name = $wpdb->prefix . 'aslchilddatasource';
-        $childdatasource = $wpdb->get_row("SELECT * FROM $table_name WHERE childID = $childID");
+    if($secondID){
+        $childdatasource = $wpdb->get_row("SELECT * FROM $table_name WHERE childID = $secondID");
         echo '<div id="link" class="d-flex align-items-center justify-content-center flex-column gap-3">
                 <div class="d-flex align-items-center justify-content-center gap-3">
                     <i class="ph ph-flow-arrow icon-md"></i>
-                    <input type="text" class="form-control w165" name="link-' . $formula_count . '" placeholder="Linked field">
+                    <input type="text" class="form-control w165" name="link-' . $formula_count . '" placeholder="Linked field" value="' . $link . '">
                 </div>
                 <div class="d-flex align-items-center justify-content-center gap-3">
                     <i class="ph ph-git-commit icon-md"></i>
-                    <input type="text" class="form-control w165" name="seperator-' . $formula_count . '" placeholder="Nhập ký tự kết nối giữa 2 dataset" value=" : ">
+                    <input type="text" class="form-control w165" name="seperator-' . $formula_count . '" placeholder="Nhập ký tự kết nối giữa 2 dataset" value="' . $seperator . '">
                 </div>
             </div>';
         echo '<div id="second" class="replace_area d-flex justify-content-center align-items-center flex-column p-4 gap-3">
@@ -260,20 +274,18 @@ function show_multiblock(){
         echo '</div>';
         echo '  <div class="d-flex justify-content-center align-items-center gap-3">
                     <i class="ph ph-brackets-curly icon-md"></i>
-                    <input type="text" class="form-control w198" name="second_field-' . $formula_count . '" placeholder="Nhập từ khóa sẽ thay thế trong file">
+                    <input type="text" class="form-control w198" name="second_field-' . $formula_count . '" placeholder="Nhập từ khóa sẽ thay thế trong file" value="' . $second_field . '">
                 </div>
                 <div class="d-flex justify-content-center align-items-center gap-3">
                     <i class="ph ph-git-commit icon-md"></i>
-                    <input type="text" class="form-control w198" name="second_seperator-' . $formula_count . '" placeholder="Nhập định dạng ngày tháng" value=", ">
+                    <input type="text" class="form-control w198" name="second_seperator-' . $formula_count . '" placeholder="Nhập ký tự phân cách" value="' . $second_seperator . '">
                 </div>';
-        echo '  <input type="hidden" name="second_datasource-' . $formula_count . '" value="' . $childID . '">
+        echo '  <input type="hidden" name="second_datasource-' . $formula_count . '" value="' . $secondID . '">
             </div>';
     }
 
     echo '</div>
         </div>';
-    
-    exit;
 }
 
 /* 

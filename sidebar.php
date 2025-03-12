@@ -25,20 +25,25 @@
                                 'icon'  => 'mdi mdi-file-document-outline',
                             ],
                             [
+                                'title' => 'Tạo tài liệu mới',
+                                'url'   => home_url('/list-folder'),
+                                'icon'  => 'mdi mdi-file-table-outline',
+                            ],
+                            [
                                 'title' => 'Mẫu tài liệu',
                                 'icon'  => 'mdi mdi-folder-table-outline',
                                 'id'    => 'template',
                                 'submenu' => [
                                     [
-                                        'title' => 'Thư mục mẫu tài liệu',
-                                        'url'   => home_url('/list-folder'),
-                                    ],
-                                    [
                                         'title' => 'Tạo thư mục mới',
                                         'url'   => home_url('/add-new-folder'),
                                     ],
                                     [
-                                        'title' => 'Tạo tài liệu mới',
+                                        'title' => 'Quản lý thư mục',
+                                        'url'   => home_url('/manage-tags'),
+                                    ],
+                                    [
+                                        'title' => 'Tạo template mới',
                                         'url'   => home_url('/add-new-template'),
                                     ],
                                 ],

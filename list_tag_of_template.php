@@ -18,11 +18,16 @@ get_header();
                 if ($tags) {
                     echo '<div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="d-flex justify-content-between align-items-center w-100">
-                                <h4 class="display-4">Danh sách thư mục</h4>
-                                <a href="' . home_url("/add-new-folder") . '" class="btn btn-info btn-icon-text d-flex align-items-center p-2 px-3">
-                                    <i class="ph ph-folder-simple-plus me-2 fa-150p"></i> Thêm mới thư mục
-                                </a>
-                            </div>
+                                <h4 class="display-4">Danh sách thư mục</h4>';
+                                
+                    # only show "Thêm mới thư mục" button to administrators
+                    if (current_user_can('administrator')) {
+                        echo '<a href="' . home_url("/add-new-folder") . '" class="btn btn-info btn-icon-text d-flex align-items-center p-2 px-3">
+                                <i class="ph ph-folder-simple-plus me-2 fa-150p"></i> Thêm mới thư mục
+                              </a>';
+                    }
+
+                    echo '</div>
                         </div>
                         <div class="statistics-details d-flex flex-row gap-3 flex-wrap">';
 

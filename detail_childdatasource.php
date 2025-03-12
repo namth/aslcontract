@@ -5,6 +5,13 @@
 get_header();
 global $wpdb;
 
+# access permission
+if (!current_user_can('administrator')) {
+    echo '<div class="alert alert-danger" role="alert">Bạn không có quyền truy cập</div>';
+    get_footer();
+    exit;
+}
+
 $childID = $_GET['childID'];
 $child = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $childID");
 
