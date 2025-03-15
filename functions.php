@@ -42,7 +42,7 @@ function enqueue_js_css(){
     wp_enqueue_script('select2.base', get_template_directory_uri() . '/assets/vendors/select2/select2.min.js', array(), '1.0', true);
     wp_enqueue_script('select2', get_template_directory_uri() . '/assets/js/select2.js', array(), '1.0', true);
     wp_enqueue_script('jquery.steps', get_template_directory_uri() . '/assets/js/jquery.steps.min.js', array(), '1.0', true);
-    wp_enqueue_script('phosphor-icon', 'https://unpkg.com/@phosphor-icons/web', array(), '1.0', true);
+    wp_enqueue_script('phosphor-icon', 'https://unpkg.com/@phosphor-icons/web@2.1.1', array(), '2.1.1', true);
     wp_enqueue_script('main', get_template_directory_uri() . '/assets/js/main.js', array(), '1.0', true);
 
     wp_localize_script('main', 'AJAX', array(

@@ -2,7 +2,6 @@
 /* 
     Template Name: Add New Tag
 */
-get_header();
 
 # process form data
 if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'], 'post_tag')) {
@@ -41,6 +40,7 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
     } 
 }
 
+get_header();
 ?>
 <div class="content-wrapper">
     <div class="card card-rounded">

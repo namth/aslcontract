@@ -2,8 +2,6 @@
 /* 
     Template Name: Edit Tag
 */
-get_header();
-
 global $wpdb;
 
 # access permission
@@ -61,6 +59,8 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
         }
     } 
 }
+
+get_header();
 
 ?>
 <div class="content-wrapper">

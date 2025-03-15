@@ -2,7 +2,6 @@
 /* 
     Template Name: Add New Datasource
 */
-get_header();
 
 # process form data
 if (isset($_POST['post_datasource_field']) && wp_verify_nonce($_POST['post_datasource_field'], 'post_datasource')) {
@@ -29,8 +28,15 @@ if (isset($_POST['post_datasource_field']) && wp_verify_nonce($_POST['post_datas
         )
     );
     $notification = 'Thêm datasource thành công';
+
+    # if success, then redirect to list datasource page
+    if (!$wpdb->last_error) {
+        wp_redirect(home_url('/datasource'));
+        exit;
+    }
 }
 
+get_header();
 ?>
 <div class="content-wrapper">
     <div class="card card-rounded">
@@ -63,8 +69,7 @@ if (isset($_POST['post_datasource_field']) && wp_verify_nonce($_POST['post_datas
                                     <select class="js-example-basic-single" id="type" name="type">
                                         <option value="aslapi">ASL API Custom</option>
                                         <option value="aslsql">ASL SQL Data</option>
-                                        <option value="oauth2">Oauth 2.0</option>
-                                        <option value="refresh_token">Refresh Token</option>
+                                        <option value="googlesheet">Google Sheets</option>
                                     </select>
                                 </div>
                                 <div class="form-group">

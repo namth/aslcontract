@@ -2,7 +2,6 @@
 /* 
 Template Name: Add New Template
 */
-get_header();
 global $wpdb;
 
 $current_user_id = get_current_user_id();
@@ -159,6 +158,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
     } 
 }
 
+get_header();
 ?>
 <div class="content-wrapper">
     <div class="row">

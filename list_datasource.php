@@ -2,8 +2,15 @@
 /* 
     Template Name: List Datasource
 */
-get_header();
 
+# access permission
+if (!current_user_can('administrator')) {
+    echo '<div class="alert alert-danger" role="alert">Bạn không có quyền truy cập</div>';
+    get_footer();
+    exit;
+}
+
+get_header();
 ?>
 <div class="content-wrapper">
     <div class="row">
