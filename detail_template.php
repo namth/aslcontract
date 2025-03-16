@@ -120,13 +120,22 @@ $create_user = get_userdata($template->userID);
                                                                 <span>' . $second_datasource->childName . '</span>
                                                             </div>';
                                                     } else {
-                                                        $show_value = $value->field;
+                                                        $show_value = isset($value->field) ? $value->field : "";
+                                                        if(!$show_value) {
+                                                            $blank_default = isset($value->default) ? $value->default : "";
+
+                                                            if($blank_default) {
+                                                                $show_value = 'Dữ liệu tự điền. Mặc định: ' . $blank_default;
+                                                            } else {
+                                                                $show_value = 'Dữ liệu tự điền.';
+                                                            }
+                                                        }
                                                     }
                                                     echo '<div class="replace_field d-flex justify-content-center align-items-center gap-3">
                                                             <i class="ph ph-puzzle-piece icon-md"></i>
                                                             <span class="w300">' . $key . '</span>
                                                             <i class="ph ph-arrow-circle-right icon-md"></i>
-                                                            <span class="w300">' . $show_value . '</span>
+                                                            <span class="mnw300">' . $show_value . '</span>
                                                         </div>';
                                                 }
                                             ?>

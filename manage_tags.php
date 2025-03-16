@@ -2,7 +2,6 @@
 /* 
 *   Template Name: Manage Tags
 */
-get_header();
 global $wpdb;
 
 # access permission
@@ -21,6 +20,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete') {
     exit;
 }
 
+get_header();
 ?>
 <div class="content-wrapper">
     <div class="row">

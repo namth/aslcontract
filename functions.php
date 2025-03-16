@@ -51,48 +51,6 @@ function enqueue_js_css(){
 }
 add_action('wp_enqueue_scripts', 'enqueue_js_css');
 
-
-// add_action('wp_ajax_select_google_drive_file', 'process_google_drive_file_selection');
-// add_action('wp_ajax_nopriv_select_google_drive_file', 'process_google_drive_file_selection');
-
-// function process_google_drive_file_selection(){
-//     $accessTokenJson = urldecode($_GET['token']);
-//     $accessToken = json_decode($accessTokenJson, true);
-
-//     $client = new Google_Client();
-//     $client->setAuthConfig(__DIR__ . '/asl-contract-client-oauth.json');
-//     $client->setAccessToken($accessToken);
-//     $service = new Google_Service_Drive($client);
-
-//     // Logic để cho phép người dùng chọn file (phần này cần dùng Javascript, không thể làm trực tiếp bằng PHP)
-//     // ... (Ví dụ: Sử dụng thư viện JavaScript của bên thứ 3) ...  Giả sử file ID được truyền từ Javascript qua AJAX
-//     $fileId = isset($_GET['fileId']) ? $_GET['fileId'] : null; 
-
-//     if ($fileId) {
-//         try {
-//             $file = $service->files->get($fileId, array('fields' => 'id, name, mimeType, size'));
-//             $fileData = [
-//                 'success' => true,
-//                 'fileId' => $file->getId(),
-//                 'fileName' => $file->getName(),
-//                 'fileType' => $file->getMimeType(),
-//                 'fileSize' => $file->getSize(),
-//             ];
-//             header('Content-Type: application/json');
-//             echo json_encode($fileData);
-//         } catch (Exception $e) {
-//             $fileData = ['success' => false, 'error' => $e->getMessage()];
-//             header('Content-Type: application/json');
-//             echo json_encode($fileData);
-//         }
-//     } else {
-//         $fileData = ['success' => false, 'error' => 'No file selected'];
-//         header('Content-Type: application/json');
-//         echo json_encode($fileData);
-//     }
-//     wp_die();
-// }
-
 function createDatabase(){
     global $wpdb;
     $charset_collate = $wpdb->get_charset_collate();
@@ -326,4 +284,51 @@ function get_manager_ids($userID) {
 add_action('after_setup_theme', 'remove_admin_bar');
 function remove_admin_bar() {
         show_admin_bar(false);
+}
+
+# replace all vietnamese character in string to english character
+function convert_vi_to_en($str) {
+    # list of vietnamese character and its english character
+    $vietnamese = array(
+        'a' => array('á', 'à', 'ả', 'ã', 'ạ', 'ă', 'ắ', 'ằ', 'ẳ', 'ẵ', 'ặ', 'â', 'ấ', 'ầ', 'ẩ', 'ẫ', 'ậ'),
+        'd' => array('đ'),
+        'e' => array('é', 'è', 'ẻ', 'ẽ', 'ẹ', 'ê', 'ế', 'ề', 'ể', 'ễ', 'ệ'),
+        'i' => array('í', 'ì', 'ỉ', 'ĩ', 'ị'),
+        'o' => array('ó', 'ò', 'ỏ', 'õ', 'ọ', 'ô', 'ố', 'ồ', 'ổ', 'ỗ', 'ộ', 'ơ', 'ớ', 'ờ', 'ở', 'ỡ', 'ợ'),
+        'u' => array('ú', 'ù', 'ủ', 'ũ', 'ụ', 'ư', 'ứ', 'ừ', 'ử', 'ữ', 'ự'),
+        'y' => array('ý', 'ỳ', 'ỷ', 'ỹ', 'ỵ'),
+        'A' => array('Á', 'À', 'Ả', 'Ã', 'Ạ', 'Ă', 'Ắ', 'Ằ', 'Ẳ', 'Ẵ', 'Ặ', 'Â', 'Ấ', 'Ầ', 'Ẩ', 'Ẫ', 'Ậ'),
+        'D' => array('Đ'),
+        'E' => array('É', 'È', 'Ẻ', 'Ẽ', 'Ẹ', 'Ê', 'Ế', 'Ề', 'Ể', 'Ễ', 'Ệ'),
+        'I' => array('Í', 'Ì', 'Ỉ', 'Ĩ', 'Ị'),
+        'O' => array('Ó', 'Ò', 'Ỏ', 'Õ', 'Ọ', 'Ô', 'Ố', 'Ồ', 'Ổ', 'Ỗ', 'Ộ', 'Ơ', 'Ớ', 'Ờ', 'Ở', 'Ỡ', 'Ợ'),
+        'U' => array('Ú', 'Ù', 'Ủ', 'Ũ', 'Ụ', 'Ư', 'Ứ', 'Ừ', 'Ử', 'Ữ', 'Ự'),
+        'Y' => array('Ý', 'Ỳ', 'Ỷ', 'Ỹ', 'Ỵ'),
+        '_' => array(' ', '?', '.', ',', '/')
+    );
+
+    # replace all vietnamese character to english character
+    foreach ($vietnamese as $en => $vi) {
+        $str = str_replace($vi, $en, $str);
+    }
+
+    return $str;
+}
+
+function textkey($text, $addstr = '_text') {
+    # we have a $text with format: "{keyname}" and we want to insert $addstr after "keyname"
+    # for example: $text = "{world}", $addstr = '_text' => $text = "{world_text}"
+    # so we need to replace "{world}" to "{world_text}"
+    $text = preg_replace('/{([a-zA-Z0-9_]+)}/', '{${1}' . $addstr . '}', $text);
+    return $text;
+}
+
+function is_valid_formula($formula) {
+    // Cho phép các số, toán tử +, -, *, /, %, dấu ngoặc đơn và dấu chấm
+    $pattern = '/^[\d\s\+\-\*\/\%\(\)\.]+$/';
+    return preg_match($pattern, $formula);
+}
+
+function remove_seperator_in_number($number) {
+    return str_replace(',', '', $number);
 }

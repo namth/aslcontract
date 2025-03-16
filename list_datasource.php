@@ -44,7 +44,7 @@ get_header();
                         echo '<div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">';
                         if ($childdatasources) {
                             foreach ($childdatasources as $childdatasource) {
-                                echo '<a href="' . home_url('/child-data?childID=') . $childdatasource->childID . '" class="d-flex justify-content-center flex-column text-center nav-link mt-2 fit-content mw150">
+                                echo '<a href="' . home_url('/child-data?childID=') . $childdatasource->childID . '" class="d-flex justify-content-center flex-column text-center nav-link mt-2 fit-content mxw150">
                                         <i class="ph ph-database icon-lg p-2"></i>
                                         <div class="d-flex flex-column">
                                             <span class="fw-bold">

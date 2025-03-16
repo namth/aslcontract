@@ -109,13 +109,13 @@
         }
       }
     });
-    if ($("#datepicker-popup").length) {
-      $('#datepicker-popup').datepicker({
+    if ($(".datepicker-popup").length) {
+      $('.datepicker-popup').datepicker({
         enableOnReadonly: true,
         todayHighlight: true,
         format: 'dd/mm/yyyy',
       });
-      $("#datepicker-popup").datepicker("setDate", "0");
+      $(".datepicker-popup").datepicker("setDate", "0");
     }
 
   });

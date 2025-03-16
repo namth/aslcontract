@@ -612,6 +612,9 @@ function create_document() {
         }
 
         # process custom data
+        // Create array to store formulas for later processing
+        $formulas = [];
+
         foreach ($_POST as $key => $value) {
             if (strpos($key, 'custom#') !== false) {
                 $suffix     = substr($key, 7);
@@ -621,11 +624,8 @@ function create_document() {
 
                 switch ($type) {
                     case 'formula':
-                        $congthuc = str_replace(array_keys($replacements), array_values($replacements), $value);
-                        $replacevalue = eval('return ' . $congthuc . ';');
-                        $replacements[$newkey] = number_format($replacevalue);
-
-                        $replacements[$newkey . '_text'] = $transformer->toWords($replacevalue);
+                        // Store formula for processing after main loop
+                        $formulas[$newkey] = str_replace(array_keys($replacements), array_values($replacements), $value);
                         break;
 
                     case 'date':
@@ -650,7 +650,7 @@ function create_document() {
                     case 'number':
                         if (is_numeric($value)) {
                             $replacements[$newkey] = number_format($value);
-                            $replacements[$newkey . '_text'] = $transformer->toWords($value);
+                            $replacements[textkey($newkey)] = ucfirst($transformer->toWords($value));
                         } else {
                             $replacements[$newkey] = $value;
                         }
@@ -661,6 +661,23 @@ function create_document() {
                         $replacements[$newkey] = $tmp_value;
                         break;
                 }
+            }
+        }
+        
+        // Process stored formulas after main loop
+        foreach ($formulas as $newkey => $formula) {
+            try {
+                $formula = remove_seperator_in_number($formula);
+                if (is_valid_formula($formula)) {
+                    $replacevalue = eval('return ' . $formula . ';');
+                    $replacements[$newkey] = number_format($replacevalue);
+                    $replacements[textkey($newkey)] = $transformer->toWords($replacevalue);
+                } else {
+                    $replacements[$newkey] = $replacevalue;
+                }
+            } catch (Exception $e) {
+                // If formula evaluation fails, skip this formula
+                continue;
             }
         }
         

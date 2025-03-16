@@ -23,6 +23,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
     # If prefix of key is 'data-', then get value of key and add to $data_replace array, switch key and value, key is trim 'data-' prefix
     $data_replace = array();
     foreach ($_POST as $key => $value) {
+        $value = convert_vi_to_en($value);
         if (strpos($key, 'data-') !== false) {
             $suffix     = substr($key, 5);
             $datatype   = $_POST['datatype-' . $suffix];
@@ -35,7 +36,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
         } else if (strpos($key, 'formula_key') !== false) {
             $formulaid      = substr($key, 12);
             // $tmp_field      = $_POST['formula_key-' . $formulaid];
-            $tmp_formula    = $_POST['formula_value-' . $formulaid];
+            $tmp_formula    = convert_vi_to_en($_POST['formula_value-' . $formulaid]);
 
             $data_replace[0][$value] = [
                 'field' => $tmp_formula,
@@ -117,6 +118,8 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
 }
 
 get_header();
+
+$options = ['text'=> 'Text', 'img' => 'Image', 'number' => 'Number'];
 ?>
 <div class="content-wrapper">
     <div class="row">
@@ -173,7 +176,7 @@ get_header();
                                                                     <span class="w165">' . $value . '</span>
                                                                     <i class="ph ph-arrow-circle-right icon-md"></i>
                                                                     <select class="js-example-basic-single w110" name="datatype-' . $childID . '#' . $value . '">';
-                                                                        $options = ['text'=> 'Text', 'img' => 'Image', 'number' => 'Number'];
+                                                                        
                                                                         foreach ($options as $key_option => $option) {
                                                                             $selected = ($key_option == $type) ? 'selected' : '';
                                                                             echo '<option value="' . $key_option . '" ' . $selected . '>' . $option . '</option>';
@@ -257,6 +260,7 @@ get_header();
                                                     break;
                                         
                                                 default:
+                                                    $blank_default = isset($obj->default) ? $obj->default : "";
                                                     echo '
                                                         <div class="data_replace_box d-flex align-items-center justify-content-center gap-4 w-100" id="formula-' . $formula_count . '">
                                                             <div class="replace_area d-flex align-items-center flex-column justify-content-center gap-3">
@@ -265,13 +269,12 @@ get_header();
                                                                     <input type="text" class="form-control w198" name="blank_key-' . $formula_count . '" placeholder="Nhập từ khóa sẽ thay thế trong file" value="' . $key_replace . '">
                                                                     <i class="ph ph-article-ny-times icon-md"></i>
                                                                     <select class="js-example-basic-single w110" id="type" name="blank_type-' . $formula_count . '">';
-                                                                        $options = ['text'=> 'Text', 'img' => 'Image', 'number' => 'Number'];
                                                                         foreach ($options as $key_option => $option) {
                                                                             $selected = ($key_option == $type) ? 'selected' : '';
-                                                                            $formula_div .= '<option value="' . $key_option . '" ' . $selected . '>' . $option . '</option>';
+                                                                            echo '<option value="' . $key_option . '" ' . $selected . '>' . $option . '</option>';
                                                                         }
                                                     echo '          </select>
-                                                                    <input type="text" class="form-control w315" name="blank_default-' . $formula_count . '" placeholder="Nhập nội dung mặc định" value="' . $field . '">
+                                                                    <input type="text" class="form-control w315" name="blank_default-' . $formula_count . '" placeholder="Nhập nội dung mặc định" value="' . $blank_default . '">
                                                                 </div>
                                                             </div>
                                                             <a id="remove_formula" class="remove_datasource nav-link" href="#">

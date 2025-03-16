@@ -43,6 +43,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
     # If prefix of key is 'data-', then get value of key and add to $data_replace array, switch key and value, key is trim 'data-' prefix
     $data_replace = array();
     foreach ($_POST as $key => $value) {
+        $value = convert_vi_to_en($value);
         if (strpos($key, 'data-') !== false) {
             $suffix     = substr($key, 5);
             $datatype   = $_POST['datatype-' . $suffix];
@@ -201,7 +202,7 @@ get_header();
                                         
                                         <div class="d-flex justify-content-center align-items-center w-100 gap-3">
                                             <label for="templateName" class="w165 text-right">Tên mẫu file tài liệu</label>
-                                            <input type="text" class="form-control mw300" id="templateName" name="templateName">
+                                            <input type="text" class="form-control mxw300" id="templateName" name="templateName">
                                         </div>
                                         
                                         <div class="d-flex justify-content-center w-100">
@@ -220,7 +221,7 @@ get_header();
 
                                         <div class="d-flex justify-content-center align-items-center w-100 gap-3">
                                             <label for="google_fileID" class="w165 text-right">Google File ID</label>
-                                            <input type="text" class="form-control mw300" id="google_fileID" name="google_fileID">
+                                            <input type="text" class="form-control mxw300" id="google_fileID" name="google_fileID">
                                         </div>
 
                                         <div class="d-flex justify-content-center align-items-center w-100 gap-3">
@@ -315,11 +316,11 @@ get_header();
                                         
                                         <div class="d-flex justify-content-center align-items-center w-100 gap-3">
                                             <label for="googleFolderID" class="w165 text-right">Google Folder ID (Thư mục đích)</label>
-                                            <input type="text" class="form-control mw300" id="googleFolderID" name="googleFolderID">
+                                            <input type="text" class="form-control mxw300" id="googleFolderID" name="googleFolderID">
                                         </div>
                                         <div class="d-flex justify-content-center align-items-center w-100 gap-3">
                                             <label for="gDestinationFilename" class="w165 text-right">Tên file sau khi tạo tự động</label>
-                                            <input type="text" class="form-control mw300" id="gDestinationFilename" name="gDestinationFilename">
+                                            <input type="text" class="form-control mxw300" id="gDestinationFilename" name="gDestinationFilename">
                                         </div>
 
                                         <?php

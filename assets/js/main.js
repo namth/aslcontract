@@ -201,10 +201,6 @@ jQuery(document).ready(function ($) {
 
         // get data from input hidden with name "ls_dataid", if not have value, return false
         var ls_dataid = $('input[name="ls_dataid"]').val();
-        if (!ls_dataid) {
-            alert('Bạn chưa chọn dữ liệu để thay thế');
-            return false;
-        }
 
         formData.append("action", "create_document");
 

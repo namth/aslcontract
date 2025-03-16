@@ -74,6 +74,7 @@ if (!$templateID) {
 //     }
 // }
 
+// echo is_valid_formula('1.2 + 3456.3');
 ?>
 <div class="content-wrapper">
     <div class="card card-rounded">
@@ -157,39 +158,6 @@ if (!$templateID) {
                                         <?php
                                         }
 
-                                        # print system data
-                                        /* if ($childData && $childData->api == 'date') {
-                                        ?>
-                                        <div class="data_replace_box d-flex align-items-center gap-4 fit-content">
-                                            <div class="d-flex justify-content-center flex-column text-center">
-                                                <i class="ph ph-database icon-lg p-2"></i>
-                                                <div class="d-flex flex-column">
-                                                    <span class="fw-bold">
-                                                        <?php echo $childData->childName; ?>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="replace_area d-flex align-items-center flex-column justify-content-center">
-                                                <div class="replace_search justify-content-center align-items-center p-2 gap-3" id="replaceSearch_<?php echo $child->childID; ?>">
-                                                    <i class="ph ph-puzzle-piece icon-md"></i>
-                                                    <div id="datepicker-popup" class="input-group date datepicker navbar-date-picker">
-                                                        <span class="input-group-addon input-group-prepend border-right">
-                                                            <span class="icon-calendar input-group-text calendar-icon"></span>
-                                                        </span>
-                                                        <input type="text" class="form-control" name="datareplace_<?php echo $child->childID; ?>">
-                                                    </div>
-                                                    <input type="hidden" name="selectdata_<?php echo $child->childID; ?>">
-                                                    <a class="choose_date nav-link border-none p-1" data-childid="<?php echo $child->childID; ?>">
-                                                        <i class="ph ph-check fa-150p"></i>
-                                                        <span class="loader"><img src="<?php echo get_template_directory_uri() . "/assets/images/loader.gif"; ?>" alt="" width="24"></span>
-                                                    </a>
-                                                </div>
-                                                <div id="replaceResult_<?php echo $child->childID; ?>" class="replace_result"></div>
-                                            </div>
-                                        </div>
-                                        <?php
-                                        } */
-
                                         # pop out data from $childs
                                         unset($childs[$key]);
                                     }
@@ -215,7 +183,7 @@ if (!$templateID) {
                                             <div class="replace_area d-flex align-items-center flex-column justify-content-center">
                                                 <div class="replace_search justify-content-center align-items-center p-2 gap-3" id="replaceSearch_<?php echo $newkey; ?>">
                                                     <i class="ph ph-puzzle-piece icon-md"></i>
-                                                    <div id="datepicker-popup" class="input-group date datepicker navbar-date-picker">
+                                                    <div class="datepicker-popup input-group date datepicker navbar-date-picker">
                                                         <span class="input-group-addon input-group-prepend border-right">
                                                             <span class="icon-calendar input-group-text calendar-icon"></span>
                                                         </span>

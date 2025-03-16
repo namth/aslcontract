@@ -31,10 +31,13 @@
 .w315 {
     width: 315px;
 }
-.mw150 {
+.mnw300 {
+    min-width: 300px;
+}
+.mxw150 {
     max-width: 150px;
 }
-.mw300 {
+.mxw300 {
     max-width: 300px;
 }
 .fit-content {
