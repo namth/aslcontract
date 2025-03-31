@@ -194,35 +194,35 @@ jQuery(document).ready(function ($) {
     * File: addnew_template.php
     * Process when submit the form with id "addnew_template_form"
     */
-    $('#create_document').submit(function (e) {
-        e.preventDefault();
-        var form = $(this);
-        var formData = new FormData(form[0]);
+    // $('#create_document').submit(function (e) {
+    //     e.preventDefault();
+    //     var form = $(this);
+    //     var formData = new FormData(form[0]);
 
-        // get data from input hidden with name "ls_dataid", if not have value, return false
-        var ls_dataid = $('input[name="ls_dataid"]').val();
+    //     // get data from input hidden with name "ls_dataid", if not have value, return false
+    //     var ls_dataid = $('input[name="ls_dataid"]').val();
 
-        formData.append("action", "create_document");
+    //     formData.append("action", "create_document");
 
-        console.log(formData);
+    //     console.log(formData);
 
-        $.ajax({
-            type: 'POST',
-            url: AJAX.ajax_url,
-            data: formData,
-            contentType: false,
-            processData: false,
-            beforeSend: function () {
-                $('#create_document').addClass('hide_important');
-                $('#create_loading').addClass('show_important');
-            },
-            success: function (response) {
-                // console.log(response);
-                $('#create_loading').html(response);
+    //     $.ajax({
+    //         type: 'POST',
+    //         url: AJAX.ajax_url,
+    //         data: formData,
+    //         contentType: false,
+    //         processData: false,
+    //         beforeSend: function () {
+    //             $('#create_document').addClass('hide_important');
+    //             $('#create_loading').addClass('show_important');
+    //         },
+    //         success: function (response) {
+    //             // console.log(response);
+    //             $('#create_loading').html(response);
 
-            }
-        });
-    });
+    //         }
+    //     });
+    // });
 
 
     /* 

@@ -16,7 +16,7 @@
   <!-- Required meta tags -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title><?php bloginfo('name'); ?> </title>
+  <title><?php echo get_the_title(); ?> </title>
   <link rel="shortcut icon" href="<?php echo get_template_directory_uri(); ?>/assets/images/favicon.png" />
   <?php wp_head(); ?>
 </head>
@@ -32,10 +32,10 @@
           </button>
         </div>
         <div>
-          <a class="navbar-brand brand-logo" href="../../index.html">
+          <a class="navbar-brand brand-logo" href="<?php echo home_url(); ?>">
             <img src="<?php echo get_template_directory_uri(); ?>/img/asl_logo.png" alt="logo" />
           </a>
-          <a class="navbar-brand brand-logo-mini" href="../../index.html">
+          <a class="navbar-brand brand-logo-mini" href="<?php echo home_url(); ?>">
             <img src="<?php echo get_template_directory_uri(); ?>/img/asl_logo.png" alt="logo" />
           </a>
         </div>

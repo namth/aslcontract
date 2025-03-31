@@ -28863,7 +28863,7 @@ dl li {
   text-align: center;
 }
 .navbar .navbar-brand-wrapper .brand-logo-mini img {
-  width: calc(70px - 30px);
+  width: fit-content;
   max-width: 100%;
   margin: auto;
 }
@@ -28923,7 +28923,7 @@ dl li {
 }
 @media (max-width: 991px) {
   .navbar .navbar-menu-wrapper {
-    width: calc(100% - 55px);
+    width: calc(100% - 220px);
     padding-top: 12px;
     padding-left: 15px;
     padding-right: 11px;
@@ -29978,7 +29978,7 @@ dl li {
     flex-direction: row;
   }
   .navbar .navbar-brand-wrapper {
-    width: 55px;
+    width: 200px;
   }
   .navbar .navbar-brand-wrapper .navbar-brand.brand-logo {
     display: none;
@@ -29995,7 +29995,7 @@ dl li {
 }
 @media (max-width: 480px) {
   .navbar .navbar-brand-wrapper {
-    width: 55px;
+    width: 150px;
   }
   .navbar .navbar-brand-wrapper .brand-logo-mini {
     padding-top: 0px;

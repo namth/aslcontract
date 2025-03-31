@@ -19,60 +19,165 @@ if (!$templateID) {
 }
 
 # process post data
-// if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-//     if (isset($_POST['post_contract_field'])) {
-//         $contract_name = $_POST['contract_name'];
-//         $ls_dataid = explode(',', $_POST['ls_dataid']);
-//         $templateID = $_POST['templateID'];
-//         $template = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltemplate WHERE templateID = $templateID");
-//         $sourceFileId = $template->gFileID;
-//         $folderId = $template->gDestinationFolderID;
-//         $current_user = wp_get_current_user();
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['post_contract_field'])) {
+        $contract_name = $_POST['contract_name'];
+        $ls_dataid = explode(',', $_POST['ls_dataid']);
+        $templateID = $_POST['templateID'];
+        $template = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltemplate WHERE templateID = $templateID");
+        $sourceFileId = $template->gFileID;
+        $folderId = $template->gDestinationFolderID;
+        $current_user = wp_get_current_user();
 
-//         if (!empty($ls_dataid)) {
-//             $replacements = [];
-//             $img_replacements = [];
-//             foreach ($ls_dataid as $childID) {
-//                 # get data_replace from post data
-//                 $selectdata = $_POST['selectdata_' . $childID];
-//                 if ($selectdata) {
-//                     $data_replace = json_decode(asl_encrypt($_POST['selectdata_' . $childID], 'd'));
+        if (!empty($ls_dataid)) {
+            $replacements = [];
+            $img_replacements = [];
 
-//                     foreach ($data_replace as $key => $value) {
-//                         $field = $value->field;
-//                         $type = $value->type;
-//                         echo $field;
-//                         switch ($type) {
-//                             case 'img':
-//                                 $img_replacements[$key] = $field;
-//                                 break;
+            foreach ($ls_dataid as $childID) {
+                # get data_replace from post data
+                $selectdata = $_POST['selectdata_' . $childID];
+                if ($selectdata) {
+                    $data_replace = json_decode(asl_encrypt($_POST['selectdata_' . $childID], 'd'));
 
-//                             case 'number':
-//                                 if (is_numeric($field)) {
-//                                     $replacements[$key] = number_format($field);
-//                                 } else {
-//                                     $replacements[$key] = $field;
-//                                 }
-//                                 break;
+                    foreach ($data_replace as $key => $value) {
+                        $field = $value->field;
+                        $type = $value->type;
+                        
+                        switch ($type) {
+                            case 'img':
+                                $img_replacements[$key] = $field;
+                                break;
+
+                            case 'number':
+                                if (is_numeric($field)) {
+                                    $replacements[$key] = number_format($field);
+                                    $replacements[$key . '_text'] = $transformer->toWords($field);
+                                } else {
+                                    $replacements[$key] = $field;
+                                }
+                                break;
                             
-//                             default:
-//                                 $replacements[$key] = $field;
-//                                 break;
-//                         }
-//                     }
-//                 }
-//             }
-//         }
+                            default:
+                                $replacements[$key] = $field;
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        # process custom data
+        // Create array to store formulas for later processing
+        $formulas = [];
+
+        foreach ($_POST as $key => $value) {
+            if (strpos($key, 'custom#') !== false) {
+                $suffix     = substr($key, 7);
+                $tmp_data   = explode('#', $suffix);
+                $type       = $tmp_data[0];
+                $newkey     = $tmp_data[1];               
+
+                switch ($type) {
+                    case 'formula':
+                        // Store formula for processing after main loop
+                        $formulas[$newkey] = str_replace(array_keys($replacements), array_values($replacements), $value);
+                        break;
+
+                    case 'date':
+                        $format = $_POST['format_' . $newkey];
+                        $date_arr = explode('/', $value);
+                        $replacevalue = str_replace(array('dd', 'mm', 'YYYY'), $date_arr, $format);
+                        $replacements[$newkey] = $replacevalue;
+                        break;
+
+                    case 'multidata':
+                        $replacekey = $_POST['key_' . $newkey];
+                        $multi_data = json_decode(asl_encrypt($value, 'd'), true);
+                        $struct     = json_decode(asl_encrypt($_POST['struct_' . $newkey], 'd'));
+                        $replacevalue = process_multidata($struct, $multi_data);
+                        $replacements[$replacekey] = $replacevalue;
+                        break;
+
+                    case 'img':
+                        $img_replacements[$newkey] = $value;
+                        break;
+
+                    case 'number':
+                        if (is_numeric($value)) {
+                            $replacements[$newkey] = number_format($value);
+                            $replacements[textkey($newkey)] = ucfirst($transformer->toWords($value));
+                        } else {
+                            $replacements[$newkey] = $value;
+                        }
+                        break;
+                    
+                    default:
+                        $tmp_value = str_replace(array_keys($replacements), array_values($replacements), $value);
+                        $replacements[$newkey] = $tmp_value;
+                        break;
+                }
+            }
+        }
         
-//         # replace newfilename with all data in $data_replace
-//         $newfilename = str_replace(array_keys($replacements), array_values($replacements), $newfilename);
+        // Process stored formulas after main loop
+        foreach ($formulas as $newkey => $formula) {
+            try {
+                $formula = remove_seperator_in_number($formula);
+                if (is_valid_formula($formula)) {
+                    $replacevalue = eval('return ' . $formula . ';');
+                    $replacements[$newkey] = number_format($replacevalue);
+                    $replacements[textkey($newkey)] = $transformer->toWords($replacevalue);
+                } else {
+                    $replacements[$newkey] = $replacevalue;
+                }
+            } catch (Exception $e) {
+                // If formula evaluation fails, skip this formula
+                continue;
+            }
+        }
+        
+        # replace newfilename with all data in $data_replace
+        $newfilename = str_replace(array_keys($replacements), array_values($replacements), $newfilename);
     
 
-//         print_r($replacements);
-//         print_r($img_replacements);
-//         $notification = '<div class="alert alert-success" role="alert">Tạo tài liệu thành công</div>';
-//     }
-// }
+        /* Clone docs file from source template file */
+        $new_file = new Google_Service_Drive_File();
+        $optParams = array(
+            'folderId' => $folderId,
+            'newfilename' => $newfilename,
+            'email' => $current_user->user_email,
+        );
+        $copyfileID = google_clone_file($sourceFileId, $new_file, $optParams);
+        
+        # if clone file success, add result to database and replace text in file with $data_replace
+        if ($copyfileID) {
+            # add result to database: asldocument table
+            $table_name = $wpdb->prefix . 'asldocument';
+            $wpdb->insert($table_name, [
+                'templateID' => $templateID,
+                'userID' => get_current_user_id(),
+                'documentName' => $newfilename,
+                'gFileID' => $copyfileID,
+                'gDestinationFolderID' => $folderId,
+                'documentModified' => current_time('mysql'),
+            ]);
+    
+            $notification = '<div class="alert alert-success" role="alert"> Tạo file thành công. File ID: ' . $copyfileID . '</div>';
+        
+            $txt_requests = google_docs_replaceText($copyfileID, $replacements);
+            $img_requests = insertImageIntoGoogleDoc($copyfileID, $img_replacements);
+
+            // print_r($txt_requests);
+            // $requests = array_merge($txt_requests, $img_requests);
+            // $batchUpdateRequest = new Google_Service_Docs_BatchUpdateDocumentRequest(array('requests' => $txt_requests));
+            // $gservice->documents->batchUpdate($copyfileID, $batchUpdateRequest);
+        } else {
+            $notification =  '<div class="alert alert-success" role="alert"> Clone thất bại' . '</div>';
+        }
+        
+        echo $notification;
+    }
+}
 
 // echo is_valid_formula('1.2 + 3456.3');
 ?>
@@ -99,7 +204,7 @@ if (!$templateID) {
                                     <p class="ms-1 mb-1 fw-bold"><?php echo $template->templateName; ?></p>
                                 </div>
                             </div>
-                            <form id="create_document" class="forms-sample col-md-6 col-lg-4 d-flex justify-content-center flex-column text-center align-items-center gap-4"
+                            <form id="create_document" class="forms-sample col-md-12 col-lg-8 d-flex justify-content-center flex-column text-center align-items-center gap-4"
                                 action="" method="post" enctype="multipart/form-data">
                                 <div class="form-group">
                                     <label for="exampleInputUsername1">Tên hợp đồng mới</label>
