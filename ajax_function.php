@@ -594,7 +594,11 @@ function create_document() {
                                 break;
 
                             case 'number':
-                                if (is_numeric($field)) {
+                                if (is_numeric($field) && $field) {
+                                    # if $field greater than 1000, then ceil it up
+                                    if ($field > 1000) {
+                                        $field = ceil($field);
+                                    }
                                     $replacements[$key] = number_format($field);
                                     $replacements[$key . '_text'] = $transformer->toWords($field);
                                 } else {
@@ -648,7 +652,11 @@ function create_document() {
                         break;
 
                     case 'number':
-                        if (is_numeric($value)) {
+                        if (is_numeric($value) && $value) {
+                            # if $value greater than 1000, then ceil it up
+                            if ($value > 1000) {
+                                $value = ceil($value);
+                            }
                             $replacements[$newkey] = number_format($value);
                             $replacements[textkey($newkey)] = ucfirst($transformer->toWords($value));
                         } else {
@@ -671,7 +679,14 @@ function create_document() {
                 if (is_valid_formula($formula)) {
                     $replacevalue = eval('return ' . $formula . ';');
                     $replacements[$newkey] = number_format($replacevalue);
-                    $replacements[textkey($newkey)] = $transformer->toWords($replacevalue);
+                    // If the value is numeric, convert it to words
+                    if (is_numeric($replacevalue) && $replacevalue) {
+                        # if $value greater than 1000, then ceil it up
+                        if ($replacevalue > 1000) {
+                            $replacevalue = ceil($replacevalue);
+                        }
+                        $replacements[textkey($newkey)] = ucfirst($transformer->toWords($replacevalue));
+                    }
                 } else {
                     $replacements[$newkey] = $replacevalue;
                 }
