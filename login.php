@@ -52,7 +52,7 @@ wp_head();
                     <div class="col-lg-4 mx-auto mb-5">
                         <div class="auth-form-light text-left py-5 px-4 px-sm-5 d-flex align-items-center justify-content-center gap-4 flex-column">
                             <div class="w200 mb-4 text-center">
-                                <img src="<?php echo get_template_directory_uri(); ?>/img/asl_logo.png" alt="logo" width="200px">
+                                <img src="<?php echo get_template_directory_uri(); ?>/img/inova_logo_900.png" alt="logo" width="200px">
                             </div>
                             <form class="pt-3 w-100" action="" method="post" enctype="multipart/form-data">
                                 <div class="form-group">

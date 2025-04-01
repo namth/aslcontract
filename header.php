@@ -8,6 +8,16 @@
   }
 
   $current_user = wp_get_current_user();
+  global $wpdb;
+
+  // Count total documents created by user
+  $doc_count = $wpdb->get_var(
+    $wpdb->prepare(
+        "SELECT COUNT(*) FROM {$wpdb->prefix}asldocument 
+        WHERE userID = %d",
+        $current_user->ID
+    )
+  );
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -21,7 +31,7 @@
   <?php wp_head(); ?>
 </head>
 
-<body>
+<body class="with-welcome-text">
   <div class="container-scroller">
     <!-- partial:../../partials/_navbar.html -->
     <nav class="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex align-items-top flex-row">
@@ -33,14 +43,20 @@
         </div>
         <div>
           <a class="navbar-brand brand-logo" href="<?php echo home_url(); ?>">
-            <img src="<?php echo get_template_directory_uri(); ?>/img/asl_logo.png" alt="logo" />
+            <img src="<?php echo get_template_directory_uri(); ?>/img/inova_logo_900.png" alt="logo" />
           </a>
           <a class="navbar-brand brand-logo-mini" href="<?php echo home_url(); ?>">
-            <img src="<?php echo get_template_directory_uri(); ?>/img/asl_logo.png" alt="logo" />
+            <img src="<?php echo get_template_directory_uri(); ?>/img/inova_logo_icon.webp" alt="logo" />
           </a>
         </div>
       </div>
       <div class="navbar-menu-wrapper d-flex align-items-top">
+        <ul class="navbar-nav">
+          <li class="nav-item fw-semibold d-none d-lg-block ms-0">
+            <h1 class="welcome-text">Chào mừng <span class="text-black fw-bold"><?php echo wp_get_current_user()->display_name; ?></span></h1>
+            <h3 class="welcome-sub-text">Bạn đã tạo <span style="color: #003366;"><?php echo $doc_count; ?> tài liệu</span> cho đến nay!</h3>
+          </li>
+        </ul>
         <ul class="navbar-nav ms-auto">
           <!-- <li class="nav-item">
             <form class="search-form" action="#">
@@ -49,7 +65,7 @@
             </form>
           </li> -->
           <li class="nav-item">
-            Xin chào, <span class="fw-semibold"><?php echo $current_user->display_name; ?></span>
+            <span class="fw-semibold"><?php echo $current_user->display_name; ?></span>
           </li>
           <li class="nav-item dropdown d-none d-lg-block user-dropdown">
             <a class="nav-link" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">

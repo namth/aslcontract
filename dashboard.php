@@ -33,28 +33,9 @@ $recent_templates = $wpdb->get_results(
     )
 );
 
-// Count total documents created by user
-$doc_count = $wpdb->get_var(
-    $wpdb->prepare(
-        "SELECT COUNT(*) FROM {$wpdb->prefix}asldocument 
-        WHERE userID = %d",
-        $current_user_id
-    )
-);
 ?>
 
 <div class="content-wrapper">
-    <div class="row">
-        <div class="col-md-12 grid-margin">
-            <div class="row">
-                <div class="col-12 col-xl-8 mb-4 mb-xl-0">
-                    <h3 class="font-weight-bold">Chào mừng <?php echo wp_get_current_user()->display_name; ?></h3>
-                    <h6 class="font-weight-normal mb-0">Bạn đã tạo <span style="color: #003366;"><?php echo $doc_count; ?> tài liệu</span> cho đến nay!</h6>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="row">
         <!-- Left Column -->
         <div class="col-md-6">
