@@ -2,6 +2,9 @@
 /* 
     Template Name: Create Document
 */
+use Google\Service\Drive\DriveFile as Google_Service_Drive_File;
+use PHPViet\NumberToWords\Transformer;
+
 get_header();
 
 # get template id
@@ -28,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $sourceFileId = $template->gFileID;
         $folderId = $template->gDestinationFolderID;
         $current_user = wp_get_current_user();
+        $transformer = new Transformer();
 
         if (!empty($ls_dataid)) {
             $replacements = [];
@@ -103,7 +107,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         break;
 
                     case 'number':
-                        if (is_numeric($value)) {
+                        if (is_numeric($value) && $value) {
+                            # if $value greater than 1000, then ceil it up
+                            if ($value > 1000) {
+                                $value = ceil($value);
+                            }
                             $replacements[$newkey] = number_format($value);
                             $replacements[textkey($newkey)] = ucfirst($transformer->toWords($value));
                         } else {
@@ -126,7 +134,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (is_valid_formula($formula)) {
                     $replacevalue = eval('return ' . $formula . ';');
                     $replacements[$newkey] = number_format($replacevalue);
-                    $replacements[textkey($newkey)] = $transformer->toWords($replacevalue);
+                    // If the value is numeric, convert it to words
+                    if (is_numeric($replacevalue) && $replacevalue) {
+                        # if $value greater than 1000, then ceil it up
+                        if ($replacevalue > 1000) {
+                            $replacevalue = ceil($replacevalue);
+                        }
+                        $replacements[textkey($newkey)] = $transformer->toWords($replacevalue);
+                    }
                 } else {
                     $replacements[$newkey] = $replacevalue;
                 }
@@ -173,9 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // $gservice->documents->batchUpdate($copyfileID, $batchUpdateRequest);
         } else {
             $notification =  '<div class="alert alert-success" role="alert"> Clone thất bại' . '</div>';
-        }
-        
-        echo $notification;
+        }        
     }
 }
 
@@ -195,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <div class="wrapper d-flex justify-content-center align-items-center flex-column py-2">
                             <?php 
                             if (isset($notification)) {
-                                echo '<div class="alert alert-success" role="alert">' . $notification . '</div>';
+                                echo $notification;
                             } else {
                             ?>
                             <div class="d-flex justify-content-center mb-3">
