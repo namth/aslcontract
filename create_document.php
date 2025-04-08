@@ -24,14 +24,14 @@ if (!$templateID) {
 # process post data
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['post_contract_field'])) {
-        $contract_name = $_POST['contract_name'];
-        $ls_dataid = explode(',', $_POST['ls_dataid']);
-        $templateID = $_POST['templateID'];
-        $template = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltemplate WHERE templateID = $templateID");
-        $sourceFileId = $template->gFileID;
-        $folderId = $template->gDestinationFolderID;
-        $current_user = wp_get_current_user();
-        $transformer = new Transformer();
+        $newfilename    = $_POST['contract_name'];
+        $ls_dataid      = explode(',', $_POST['ls_dataid']);
+        $templateID     = $_POST['templateID'];
+        $template       = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltemplate WHERE templateID = $templateID");
+        $sourceFileId   = $template->gFileID;
+        $folderId       = $template->gDestinationFolderID;
+        $current_user   = wp_get_current_user();
+        $transformer    = new Transformer();
 
         if (!empty($ls_dataid)) {
             $replacements = [];
@@ -127,27 +127,60 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
         
-        // Process stored formulas after main loop
-        foreach ($formulas as $newkey => $formula) {
-            try {
-                $formula = remove_seperator_in_number($formula);
-                if (is_valid_formula($formula)) {
-                    $replacevalue = eval('return ' . $formula . ';');
-                    $replacements[$newkey] = number_format($replacevalue);
-                    // If the value is numeric, convert it to words
-                    if (is_numeric($replacevalue) && $replacevalue) {
-                        # if $value greater than 1000, then ceil it up
-                        if ($replacevalue > 1000) {
-                            $replacevalue = ceil($replacevalue);
+        // Process stored formulas after main loop with iterative approach
+        $processed_count = 0;
+        $max_iterations = 10; // Prevent infinite loops
+        $iteration = 0;
+        
+        while (!empty($formulas) && $iteration < $max_iterations) {
+            $iteration++;
+            $failed_formulas = [];
+            $success_count = 0;
+            
+            foreach ($formulas as $newkey => $formula) {
+                try {
+                    // Replace any keys in the formula with their current values
+                    $parsed_formula = str_replace(array_keys($replacements), array_values($replacements), $formula);
+                    $parsed_formula = remove_seperator_in_number($parsed_formula);
+                    
+                    if (is_valid_formula($parsed_formula)) {
+                        $replacevalue = eval('return ' . $parsed_formula . ';');
+                        $replacements[$newkey] = number_format($replacevalue);
+                        
+                        // If the value is numeric, convert it to words
+                        if (is_numeric($replacevalue) && $replacevalue) {
+                            # if $value greater than 1000, then ceil it up
+                            if ($replacevalue > 1000) {
+                                $replacevalue = ceil($replacevalue);
+                            }
+                            $replacements[textkey($newkey)] = ucfirst($transformer->toWords($replacevalue));
                         }
-                        $replacements[textkey($newkey)] = $transformer->toWords($replacevalue);
+                        
+                        $processed_count++;
+                        $success_count++;
+                    } else {
+                        // Formula is not valid yet, keep for next iteration
+                        $failed_formulas[$newkey] = $formula;
                     }
-                } else {
-                    $replacements[$newkey] = $replacevalue;
+                } catch (Exception $e) {
+                    // If formula evaluation fails, save for next iteration
+                    $failed_formulas[$newkey] = $formula;
                 }
-            } catch (Exception $e) {
-                // If formula evaluation fails, skip this formula
-                continue;
+            }
+            
+            // Update formulas array with failed ones for next iteration
+            $formulas = $failed_formulas;
+            
+            // If no formulas were successfully processed in this iteration, break
+            if ($success_count == 0) {
+                break;
+            }
+        }
+        
+        // Add remaining unprocessed formulas as their original text if they couldn't be evaluated
+        foreach ($formulas as $newkey => $formula) {
+            if (!isset($replacements[$newkey])) {
+                $replacements[$newkey] = $formula;
             }
         }
         

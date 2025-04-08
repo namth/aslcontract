@@ -61,6 +61,11 @@ $tag = $wpdb->get_row("SELECT * FROM $table_name WHERE tagID = $tagid");
                                 <a href="<?php echo home_url('/create-document?templateID=') . $template->templateID; ?>" class="asl-round-btn nav-link text-primary pr-2">
                                     <i class="ph ph-sparkle fa-150p"></i>
                                 </a>
+                                <?php if (current_user_can('administrator')) : ?>
+                                <a href="<?php echo home_url('/duplicate-template?templateID=') . $template->templateID; ?>" class="asl-round-btn nav-link text-primary pr-2">
+                                    <i class="ph ph-files fa-150p"></i>
+                                </a>
+                                <?php endif; ?>
                             </div>
                         </div>
                         <?php

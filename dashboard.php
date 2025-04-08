@@ -42,7 +42,6 @@ $doc_count = $wpdb->get_var(
     )
 );
 ?>
-
 <div class="content-wrapper">
     <div class="row">
         <div class="col-md-12 grid-margin">
