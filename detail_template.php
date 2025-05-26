@@ -2,7 +2,10 @@
 /* 
 *   Template Name: Detail Template
 */
+use Google\Service\Drive;
+
 global $wpdb;
+global $client;
 
 $templateID = $_GET['templateID'];
 $table_name = $wpdb->prefix . 'asltemplate';
@@ -52,18 +55,49 @@ $create_user = get_userdata($template->userID);
                             # get tag name from asltag table by tagID
                             $tag = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltags WHERE tagID = $template->tagID");
 
-                            echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph ph-folder me-2'></i>Thư mục:</b> " . $tag->tagName . "</span>";
+                            echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-folder me-2'></i>Thư mục:</b> " . $tag->tagName . "</span>";
 
                             if (current_user_can('administrator')) {
-                                echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph ph-file-cloud me-2'></i>Google File ID:</b> " . $template->gFileID . "</span>";
-                                echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph ph-cloud-arrow-up me-2'></i>Google ID thư mục đích:</b> " . $template->gDestinationFolderID . "</span>";
+                                // Create Google Drive service instance
+                                $service = new Drive($client);
+                                $fileViewLink = '';
+                                $folderViewLink = '';
+                                
+                                // Get view link for Google file
+                                try {
+                                    $file = $service->files->get($template->gFileID, array(
+                                        'fields' => 'webViewLink'
+                                    ));
+                                    if (isset($file->webViewLink)) {
+                                        $fileViewLink = $file->webViewLink;
+                                    }
+                                } catch (Exception $e) {
+                                    // If error, fallback to direct link
+                                    $fileViewLink = 'https://docs.google.com/document/d/' . $template->gFileID . '/edit';
+                                }
+                                
+                                // Get view link for Google folder
+                                try {
+                                    $folder = $service->files->get($template->gDestinationFolderID, array(
+                                        'fields' => 'webViewLink'
+                                    ));
+                                    if (isset($folder->webViewLink)) {
+                                        $folderViewLink = $folder->webViewLink;
+                                    }
+                                } catch (Exception $e) {
+                                    // If error, fallback to direct link
+                                    $folderViewLink = 'https://drive.google.com/drive/folders/' . $template->gDestinationFolderID;
+                                }
+                                
+                                echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-file-cloud me-2'></i>Google File ID:</b> <a href='" . $fileViewLink . "' target='_blank' title='Mở file Google' class='d-flex align-items-center gap-3 nav-link'>" . $template->gFileID . " <i class='ph-bold ph-arrow-square-out'></i></a></span>";
+                                echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-cloud-arrow-up me-2'></i>Google ID thư mục đích:</b> <a href='" . $folderViewLink . "' target='_blank' title='Mở thư mục Google' class='d-flex align-items-center gap-3 nav-link'>" . $template->gDestinationFolderID . " <i class='ph-bold ph-arrow-square-out'></i></a></span>";
                             }
-                            echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph ph-chat-teardrop-text me-2'></i>Tên file mẫu:</b> " . $template->gDestinationFilename . "</span>";
-                            echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph ph-user me-2'></i>Người tạo:</b> " . $create_user->display_name . "</span>";
+                            echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-chat-teardrop-text me-2'></i>Tên file mẫu:</b> " . $template->gDestinationFilename . "</span>";
+                            echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-user me-2'></i>Người tạo:</b> " . $create_user->display_name . "</span>";
 
                             echo '<div class="d-flex align-items-center gap-3 mt-2">
                                     <span class="d-flex align-items-center gap-2">
-                                        <b><i class="ph ph-database me-2"></i>Data Source</b>
+                                        <b><i class="ph-bold ph-database me-2"></i>Data Source</b>
                                     </span>';
                             if (current_user_can('administrator')) {
                                 echo '  <a href="' . home_url('/edit-template/?action=delete&templateID=') . $templateID . '" class="btn btn-icon-text me-2 d-flex align-items-center">

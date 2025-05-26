@@ -88,7 +88,7 @@ function google_clone_file($sourceFileId, Google_Service_Drive_File $new_file, $
             $result = $service->permissions->create($copiedFile->id, $permission);
         }
 
-        return $copiedFile->id;
+        return $copiedFile->id; // Trả về ID của file mới đã được sao chép
     } catch (Exception $e) {
         return false;
     }
@@ -153,7 +153,7 @@ function insertImageIntoGoogleDoc($fileId, $img_replacements)
                         if (strpos($text, $textToReplace) !== false) {
                             $startIndex = $paragraphElement->startIndex;
                             $found = true;
-    
+
                             // 4. Xóa văn bản cần thay thế ( nếu tìm thấy)
                             $requests[] = new Google_Service_Docs_Request(array(
                                 'deleteContentRange' => [
@@ -170,7 +170,17 @@ function insertImageIntoGoogleDoc($fileId, $img_replacements)
                                     'uri' => $imageUrl,
                                     'location' => array(
                                         'index' => $startIndex,
-                                    )
+                                    ),
+                                    // 'objectSize' => array(
+                                    //     'height' => array(
+                                    //         'magnitude' => 20,
+                                    //         'unit' => 'PT',
+                                    //     ),
+                                    //     'width' => array(
+                                    //         'magnitude' => 20,
+                                    //         'unit' => 'PT',
+                                    //     ),
+                                    // )
                                 )
                             ));
                         }
@@ -178,8 +188,9 @@ function insertImageIntoGoogleDoc($fileId, $img_replacements)
                 }
             }
         } else if ($structuralElement->table) {
-            foreach ($structuralElement->table->tableRows as $row) {
-                foreach ($row->tableCells as $cell) {
+            $table = $structuralElement->table;
+            foreach ($structuralElement->table->tableRows as $rowIndex => $row) {
+                foreach ($row->tableCells as $colIndex => $cell) {
                     foreach ($cell->content as $content) {
                         if ($content->paragraph) {
                             foreach ($content->paragraph->elements as $paragraphElement) {
@@ -189,6 +200,23 @@ function insertImageIntoGoogleDoc($fileId, $img_replacements)
                                         if (strpos($text, $textToReplace) !== false) {
                                             $startIndex = $paragraphElement->startIndex;
                                             $found = true;
+
+                                            # Tính toán kích thước cell
+                                            $tableStyle = $table->getTableStyle();
+                                            
+                                            if (isset($tableStyle->tableColumnProperties[$colIndex])) {
+                                                $colProp = $tableStyle->tableColumnProperties[$colIndex];
+                                                $colWidth = $colProp->getWidth();
+                                                $padding = 6; // Padding mặc định của Google Docs
+                                                
+                                                // Truy cập width từ modelData
+                                                if (isset($colWidth)) {
+                                                    $cellWidth = $colWidth['magnitude'] - $padding * 2; // Trừ đi padding * 2 bên để ảnh căn vào giữa
+                                                }
+                                            }
+
+                                            // print_r($colProp->getWidth());
+                                            // print_r("<br>cellWidth: " . $cellWidth);
 
                                             // 4. Xóa văn bản cần thay thế ( nếu tìm thấy)
                                             $requests[] = new Google_Service_Docs_Request(array(
@@ -206,6 +234,16 @@ function insertImageIntoGoogleDoc($fileId, $img_replacements)
                                                     'uri' => $imageUrl,
                                                     'location' => array(
                                                         'index' => $startIndex,
+                                                    ),
+                                                    'objectSize' => array(
+                                                        // 'height' => array(
+                                                        //     'magnitude' => 50,
+                                                        //     'unit' => 'PT',
+                                                        // ),
+                                                        'width' => array(
+                                                            'magnitude' => $cellWidth,
+                                                            'unit' => 'PT',
+                                                        ),
                                                     )
                                                 )
                                             ));
@@ -220,7 +258,30 @@ function insertImageIntoGoogleDoc($fileId, $img_replacements)
         }
     }
 
-    // return $requests;
+    // Sắp xếp các requests theo startIndex từ lớn đến nhỏ (đảo ngược)
+    if (isset($requests) && count($requests) > 1) {
+        usort($requests, function($a, $b) {
+            // Lấy startIndex từ deleteContentRange request
+            $startIndexA = null;
+            $startIndexB = null;
+            
+            // Tìm startIndex từ deleteContentRange hoặc insertInlineImage
+            if (isset($a->deleteContentRange) && isset($a->deleteContentRange->range)) {
+                $startIndexA = $a->deleteContentRange->range->startIndex;
+            } elseif (isset($a->insertInlineImage) && isset($a->insertInlineImage->location)) {
+                $startIndexA = $a->insertInlineImage->location->index;
+            }
+            
+            if (isset($b->deleteContentRange) && isset($b->deleteContentRange->range)) {
+                $startIndexB = $b->deleteContentRange->range->startIndex;
+            } elseif (isset($b->insertInlineImage) && isset($b->insertInlineImage->location)) {
+                $startIndexB = $b->insertInlineImage->location->index;
+            }
+            
+            // Sắp xếp từ lớn đến nhỏ (đảo ngược)
+            return $startIndexB - $startIndexA;
+        });
+    }
 
     // 3. Xử lý trường hợp không tìm thấy văn bản
     if ($startIndex === null) {

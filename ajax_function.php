@@ -560,7 +560,7 @@ function create_document() {
     global $wpdb;
     global $client;
 
-    // $gservice = new Google_Service_Docs($client);
+    $serviceDrive = new Google_Service_Drive($client);
 
     if (isset($_POST['post_contract_field']) && wp_verify_nonce($_POST['post_contract_field'], 'post_contract')) {
         # get post data
@@ -590,7 +590,14 @@ function create_document() {
                         
                         switch ($type) {
                             case 'img':
-                                $img_replacements[$key] = $field;
+                                if (!empty($field) && filter_var($field, FILTER_VALIDATE_URL)) {
+                                    // Check if the URL ends with a common image extension
+                                    $image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+                                    $path_parts = pathinfo(parse_url($field, PHP_URL_PATH));
+                                    if (isset($path_parts['extension']) && in_array(strtolower($path_parts['extension']), $image_extensions)) {
+                                        $img_replacements[$key] = $field;
+                                    }
+                                }
                                 break;
 
                             case 'number':
@@ -648,7 +655,14 @@ function create_document() {
                         break;
 
                     case 'img':
-                        $img_replacements[$newkey] = $value;
+                        if (!empty($value) && filter_var($value, FILTER_VALIDATE_URL)) {
+                            // Check if the URL ends with a common image extension
+                            $image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+                            $path_parts = pathinfo(parse_url($value, PHP_URL_PATH));
+                            if (isset($path_parts['extension']) && in_array(strtolower($path_parts['extension']), $image_extensions)) {
+                                $img_replacements[$newkey] = $value;
+                            }
+                        }
                         break;
 
                     case 'number':
@@ -740,6 +754,13 @@ function create_document() {
             'email' => $current_user->user_email,
         );
         $copyfileID = google_clone_file($sourceFileId, $new_file, $optParams);
+        # get webViewLink of the cloned file
+        if ($copyfileID) {
+            $new_file = $serviceDrive->files->get($copyfileID, array('fields' => 'webViewLink'));
+            $webViewLink = $new_file->getWebViewLink();
+        } else {
+            $webViewLink = '';
+        }
         
         # if clone file success, add result to database and replace text in file with $data_replace
         if ($copyfileID) {
@@ -754,15 +775,22 @@ function create_document() {
                 'documentModified' => current_time('mysql'),
             ]);
     
-            $notification = '<div class="alert alert-success" role="alert"> Tạo file thành công. File ID: ' . $copyfileID . '</div>';
+            $notification = '
+                <div class="alert alert-success mb-3" role="alert"> 
+                    Tạo file: <b>' . $newfilename . '</b> thành công.
+                </div>
+                <div class="d-flex justify-content-center mt-2">
+                    <a href="' . home_url('/list-document') . '" class="btn btn-danger btn-icon-text me-2 d-flex align-items-center"> 
+                        <i class="ph-bold ph-files me-2"></i> Về trang danh sách tài liệu
+                    </a>
+                    <a href="' . $webViewLink . '" target="_blank" class="btn btn-info btn-icon-text me-2 d-flex align-items-center"> 
+                        <i class="ph-bold ph-file-cloud me-2"></i> Xem tài liệu
+                    </a>
+                </div>';
         
             $txt_requests = google_docs_replaceText($copyfileID, $replacements);
             $img_requests = insertImageIntoGoogleDoc($copyfileID, $img_replacements);
 
-            // print_r($txt_requests);
-            // $requests = array_merge($txt_requests, $img_requests);
-            // $batchUpdateRequest = new Google_Service_Docs_BatchUpdateDocumentRequest(array('requests' => $txt_requests));
-            // $gservice->documents->batchUpdate($copyfileID, $batchUpdateRequest);
         } else {
             $notification =  '<div class="alert alert-success" role="alert"> Clone thất bại' . '</div>';
         }

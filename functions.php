@@ -62,6 +62,8 @@ function createDatabase(){
         `tagID` mediumint(9) UNSIGNED NOT NULL AUTO_INCREMENT,
         `tagName` varchar(255) NOT NULL,
         `tagDescription` varchar(255) NOT NULL,
+        `tagType` varchar(255) NOT NULL,
+        `googleFileID` varchar(255) NULL,
         `tagModified` datetime NOT NULL,
         PRIMARY KEY  (tagID)
     ) $charset_collate;";
@@ -331,4 +333,45 @@ function is_valid_formula($formula) {
 
 function remove_seperator_in_number($number) {
     return str_replace(',', '', $number);
+}
+
+function isFileSharedWithEmail($fileId, $email) {
+    global $client;
+    $service = new Google_Service_Drive($client);
+    $permissions = $service->permissions->listPermissions($fileId);
+
+    foreach ($permissions->getPermissions() as $permission) {
+        if (isset($permission->emailAddress) && $permission->emailAddress == $email) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Trích xuất Google ID từ các đường link Google Drive, Docs hoặc Sheets.
+ *
+ * @param string $url Đường link Google.
+ * @return string|null Google ID nếu tìm thấy, ngược lại trả về null.
+ */
+function getGoogleIdFromUrl(string $url): ?string
+{
+    // Biểu thức chính quy cho Google Drive (thư mục)
+    if (preg_match('/drive\.google\.com\/drive\/(?:u\/\d+\/)?folders\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+        return $matches[1];
+    }
+
+    // Biểu thức chính quy cho Google Docs
+    if (preg_match('/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+        return $matches[1];
+    }
+
+    // Biểu thức chính quy cho Google Sheets
+    if (preg_match('/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+        return $matches[1];
+    }
+
+    // Nếu không tìm thấy ID nào, trả về null
+    return null;
 }

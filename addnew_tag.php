@@ -3,6 +3,9 @@
     Template Name: Add New Tag
 */
 
+# Get tag type from URL parameter, default to 'normal'
+$tagType = isset($_GET['tagType']) ? sanitize_text_field($_GET['tagType']) : 'normal';
+
 # process form data
 if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'], 'post_tag')) {
     global $wpdb;
@@ -11,10 +14,18 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
     $tagName = $_POST['tagName'];
     $tagDescription = $_POST['tagDescription'];
     $tagModified = date('Y-m-d H:i:s');
+    $tagType = isset($_POST['tagType']) ? sanitize_text_field($_POST['tagType']) : 'normal';
+    $googleFileID = ($tagType === 'google') ? sanitize_text_field($_POST['googleFileID']) : '';
 
     # tagName is required, if not have, then show error message
     if (empty($tagName)) {
         $notification = 'Tên thư mục không được để trống';
+        $error = true;
+    }
+    
+    # googleFileID is required if tagType is 'google'
+    if ($tagType === 'google' && empty($googleFileID)) {
+        $notification = 'ID tài liệu Google không được để trống';
         $error = true;
     }
 
@@ -26,7 +37,9 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
             array(
                 'tagName' => $tagName,
                 'tagDescription' => $tagDescription,
-                'tagModified' => $tagModified
+                'tagModified' => $tagModified,
+                'tagType' => $tagType,
+                'googleFileID' => $googleFileID
             )
         );
         # if not success, then show error message
@@ -71,6 +84,13 @@ get_header();
                                     <label for="tagDescription">Mô tả ngắn</label>
                                     <input type="text" class="form-control text-center" id="tagDescription" name="tagDescription">
                                 </div>
+                                <input type="hidden" name="tagType" value="<?php echo esc_attr($tagType); ?>">
+                                <?php if ($tagType === 'google'): ?>
+                                <div class="form-group">
+                                    <label for="googleFileID">ID tài liệu Google</label>
+                                    <input type="text" class="form-control text-center" id="googleFileID" name="googleFileID" value="<?php echo isset($googleFileID) ? esc_attr($googleFileID) : ''; ?>">
+                                </div>
+                                <?php endif; ?>
                                 <?php
                                 wp_nonce_field('post_tag', 'post_tag_field');
                                 ?>
@@ -90,3 +110,4 @@ get_header();
 </div>
 <?php
 get_footer();
+?>

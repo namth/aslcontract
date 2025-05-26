@@ -4,12 +4,20 @@
 */
 use Google\Service\Drive\DriveFile as Google_Service_Drive_File;
 use PHPViet\NumberToWords\Transformer;
+use Google\Service\Drive;
+use Google\Service\Docs as Google_Service_Docs;
+use Google\Service\Docs\SubstringMatchCriteria as Google_Service_SubstringMatchCriteria;
+use Google\Service\Docs\Request as Google_Service_Docs_Request;
+use Google\Service\Docs\BatchUpdateDocumentRequest as Google_Service_Docs_BatchUpdateDocumentRequest;
 
 get_header();
 
 # get template id
 $templateID = $_GET['templateID'];
 global $wpdb;
+global $client;
+
+$service = new Drive($client);
 
 # if have not template id, then redirect to list folder page
 if (!$templateID) {
@@ -49,7 +57,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         
                         switch ($type) {
                             case 'img':
-                                $img_replacements[$key] = $field;
+                                if (!empty($field) && filter_var($field, FILTER_VALIDATE_URL)) {
+                                    // Check if the URL ends with a common image extension
+                                    $image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+                                    $path_parts = pathinfo(parse_url($field, PHP_URL_PATH));
+                                    if (isset($path_parts['extension']) && in_array(strtolower($path_parts['extension']), $image_extensions)) {
+                                        $img_replacements[$key] = $field;
+                                    }
+                                }
                                 break;
 
                             case 'number':
@@ -103,7 +118,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         break;
 
                     case 'img':
-                        $img_replacements[$newkey] = $value;
+                        if (!empty($value) && filter_var($value, FILTER_VALIDATE_URL)) {
+                            // Check if the URL ends with a common image extension
+                            $image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+                            $path_parts = pathinfo(parse_url($value, PHP_URL_PATH));
+                            if (isset($path_parts['extension']) && in_array(strtolower($path_parts['extension']), $image_extensions)) {
+                                $img_replacements[$newkey] = $value;
+                            }
+                        }
                         break;
 
                     case 'number':
@@ -196,6 +218,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'email' => $current_user->user_email,
         );
         $copyfileID = google_clone_file($sourceFileId, $new_file, $optParams);
+        # get webViewLink of the cloned file
+        if ($copyfileID) {
+            $new_file = $service->files->get($copyfileID, array('fields' => 'webViewLink'));
+            $webViewLink = $new_file->getWebViewLink();
+        } else {
+            $webViewLink = '';
+        }
         
         # if clone file success, add result to database and replace text in file with $data_replace
         if ($copyfileID) {
@@ -210,22 +239,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'documentModified' => current_time('mysql'),
             ]);
     
-            $notification = '<div class="alert alert-success" role="alert"> Tạo file thành công. File ID: ' . $copyfileID . '</div>';
+            $notification = '<div class="alert alert-success" role="alert"> 
+                Tạo file thành công. File ID: ' . $copyfileID . '
+                <div class="mt-2">
+                    <a href="' . $webViewLink . '" target="_blank" class="btn btn-primary">Xem tài liệu</a>
+                </div>
+            </div>';
         
             $txt_requests = google_docs_replaceText($copyfileID, $replacements);
             $img_requests = insertImageIntoGoogleDoc($copyfileID, $img_replacements);
-
-            // print_r($txt_requests);
-            // $requests = array_merge($txt_requests, $img_requests);
-            // $batchUpdateRequest = new Google_Service_Docs_BatchUpdateDocumentRequest(array('requests' => $txt_requests));
-            // $gservice->documents->batchUpdate($copyfileID, $batchUpdateRequest);
         } else {
             $notification =  '<div class="alert alert-success" role="alert"> Clone thất bại' . '</div>';
         }        
     }
 }
 
-// echo is_valid_formula('1.2 + 3456.3');
 ?>
 <div class="content-wrapper">
     <div class="card card-rounded">
@@ -415,7 +443,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <?php 
                             }
                             ?>
-                            <div id="create_loading">
+                            <div id="create_loading" class="justify-content-center flex-column">
                                 <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
                                 <dotlottie-player src="https://lottie.host/50abcbf0-6a0e-47cf-9432-cb11fa05f0ef/UGUCILoRSN.lottie" background="transparent" speed="1" style="width: 300px; height: 300px" loop autoplay></dotlottie-player>
                             </div>
