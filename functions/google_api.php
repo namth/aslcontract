@@ -58,6 +58,79 @@ function google_docs_edit_content($fileId, $newContent)
     return $result;
 }
 
+/*
+ * Hàm chia sẻ một mục trên Google Drive với một email cụ thể
+ *
+ * @param string $itemId ID của mục cần chia sẻ
+ * @param string $email Email của người dùng mà bạn muốn chia sẻ
+ * @param string $role Vai trò của người dùng (ví dụ: 'reader', 'writer', 'commenter', 'organizer')
+ * @return array Kết quả của việc chia sẻ, bao gồm thành công hay không và thông báo
+*/
+function shareGoogleDriveItem($itemId, $email, $role = 'writer') {
+    global $client; // Giả sử $client đã được khởi tạo và xác thực
+
+    $service = new Google_Service_Drive($client);
+    $isShared = isFileSharedWithEmail($itemId, $email); // Kiểm tra xem email đã được chia sẻ chưa
+
+    if (isset($isShared['error'])) {
+        return ['success' => false, 'message' => 'Lỗi khi kiểm tra quyền chia sẻ: ' . $isShared['error']];
+    }
+
+    if ($isShared['shared']) {
+        return ['success' => true, 'message' => 'Email đã được chia sẻ trước đó.']; // Email đã được chia sẻ
+    } else {
+        try {
+            $permission = new Google_Service_Drive_Permission([
+                'emailAddress' => $email,
+                'role' => $role,
+                'type' => 'user',
+            ]);
+
+            $service->permissions->create($itemId, $permission);
+            return ['success' => true, 'message' => 'Đã chia sẻ thành công.'];
+
+        } catch (Google_Service_Exception $e) {
+            return ['success' => false, 'message' => 'Lỗi khi chia sẻ: ' . $e->getMessage()];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Lỗi không xác định: ' . $e->getMessage()];
+        }
+    }
+}
+
+//Hàm kiểm tra quyền chia sẻ (đã được định nghĩa trước đó)
+function isFileSharedWithEmail($fileId, $email) {
+    global $client; 
+
+    $service = new Google_Service_Drive($client);
+
+    try {
+        $permissions = $service->permissions->listPermissions($fileId, array(
+            'fields' => 'permissions(emailAddress, role)'
+        ));
+
+        foreach ($permissions->getPermissions() as $permission) {
+            if ($permission->getEmailAddress() == $email) {
+                return ['shared' => true, 'role' => $permission->getRole()];
+            }
+        }
+        return ['shared' => false, 'role' => null]; 
+
+    } catch (Google_Service_Exception $e) {
+        return ['error' => $e->getMessage()];
+    } catch (Exception $e) {
+        return ['error' => $e->getMessage()];
+    }
+}
+
+
+/**
+ * Hàm sao chép file trên Google Drive
+ *
+ * @param string $sourceFileId ID của file nguồn cần sao chép
+ * @param Google_Service_Drive_File $new_file Đối tượng Google_Service_Drive_File chứa thông tin file mới
+ * @param array $optParams Mảng tùy chọn, bao gồm 'newfilename' và 'folderId'
+ * @return string|bool ID của file mới đã được sao chép hoặc false nếu có lỗi
+ */
 function google_clone_file($sourceFileId, Google_Service_Drive_File $new_file, $optParams = [])
 {
     global $client;

@@ -335,20 +335,6 @@ function remove_seperator_in_number($number) {
     return str_replace(',', '', $number);
 }
 
-function isFileSharedWithEmail($fileId, $email) {
-    global $client;
-    $service = new Google_Service_Drive($client);
-    $permissions = $service->permissions->listPermissions($fileId);
-
-    foreach ($permissions->getPermissions() as $permission) {
-        if (isset($permission->emailAddress) && $permission->emailAddress == $email) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 /**
  * Trích xuất Google ID từ các đường link Google Drive, Docs hoặc Sheets.
  *
@@ -372,6 +358,6 @@ function getGoogleIdFromUrl(string $url): ?string
         return $matches[1];
     }
 
-    // Nếu không tìm thấy ID nào, trả về null
-    return null;
+    // Nếu không tìm thấy ID nào, trả lại kết quả là $url
+    return $url;
 }

@@ -10,8 +10,8 @@ $current_user_id = get_current_user_id();
 if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_template_field'], 'post_template')) {
     $error = false;
     $templateName = $_POST['templateName'];
-    $google_fileID = $_POST['google_fileID'];
-    $googleFolderID = $_POST['googleFolderID'];
+    $google_fileID = getGoogleIdFromUrl($_POST['google_fileID']);
+    $googleFolderID = getGoogleIdFromUrl($_POST['googleFolderID']);
     $gDestinationFilename = $_POST['gDestinationFilename'];
     $tagID = $_POST['tagID'];
 
@@ -131,6 +131,10 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
             )
         );
 
+        # share file to GG_APP_EMAIL
+        shareGoogleDriveItem($google_fileID, GG_APP_EMAIL);
+        shareGoogleDriveItem($googleFolderID, GG_APP_EMAIL);
+        
         # if $data_replace is not empty, then insert data to database
         if ($data_replace) {
             $templateID = $wpdb->insert_id;

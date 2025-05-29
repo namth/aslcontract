@@ -68,6 +68,11 @@ if (!$child) {
                                 <a href="<?php echo home_url('/edit-child-data?childID=') . $child->childID; ?>" class="btn btn-info btn-icon-text me-2 d-flex align-items-center">
                                     <i class="ph ph-pencil-simple-line btn-icon-prepend fa-150p"></i> Sửa dữ liệu
                                 </a>
+                                <?php if ($source->type === 'aslsql'): ?>
+                                <a href="<?php echo home_url('/view-local-table?childID=') . $child->childID; ?>" class="btn btn-success btn-icon-text me-2 d-flex align-items-center">
+                                    <i class="ph ph-table btn-icon-prepend fa-150p"></i> Xem dữ liệu bảng
+                                </a>
+                                <?php endif; ?>
                                 <a href="<?php 
                                     # show alert with javascript to confirm delete, then go to this page with action=delete and childID
                                     echo home_url('/child-data?action=delete&childID=') . $child->childID;                                     
