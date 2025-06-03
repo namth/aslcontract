@@ -37,7 +37,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $templateID     = $_POST['templateID'];
         $template       = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltemplate WHERE templateID = $templateID");
         $sourceFileId   = $template->gFileID;
-        $folderId       = $template->gDestinationFolderID;
+        
+        # Get Google folder ID from associated Google tag
+        $folderId = null;
+        if ($template->googleTagID) {
+            $googleTag = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltags WHERE tagID = $template->googleTagID");
+            if ($googleTag && $googleTag->googleFileID) {
+                $folderId = $googleTag->googleFileID;
+            }
+        }
+        
         $current_user   = wp_get_current_user();
         $transformer    = new Transformer();
 
@@ -235,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'userID' => get_current_user_id(),
                 'documentName' => $newfilename,
                 'gFileID' => $copyfileID,
-                'gDestinationFolderID' => $folderId,
+                'tagID' => $template->googleTagID,
                 'documentModified' => current_time('mysql'),
             ]);
     
@@ -289,7 +298,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <i class="fa fa-folder-open-o fa-150p"></i>
                                     <div class="wrapper ms-3">
                                         <p class="ms-1 mb-1 fw-bold">Thư mục đích:
-                                            <?php echo $template->gDestinationFolderID; ?>
+                                            <?php 
+                                                if ($template->googleTagID) {
+                                                    $googleTag = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltags WHERE tagID = $template->googleTagID");
+                                                    echo $googleTag ? $googleTag->tagName : 'Chưa thiết lập';
+                                                } else {
+                                                    echo 'Chưa thiết lập';
+                                                }
+                                            ?>
                                         </p>
                                     </div>
                                 </div>
@@ -376,6 +392,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <?php
                                         } else if ($type == 'multitext') {
                                             $struct = asl_encrypt(json_encode($replace_arr));
+                                            $default = $replace_arr->default;
                                             ?>
                                             <div class="data_replace_box d-flex align-items-center gap-4 fit-content">
                                                 <div class="d-flex justify-content-center flex-column text-center">
@@ -390,7 +407,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                                     <div id="multiResult_<?php echo $newkey; ?>" class=""></div>
                                                     <div class="replace_search justify-content-center align-items-center p-2 gap-3" id="replaceSearch_<?php echo $newkey; ?>">
                                                         <i class="ph ph-puzzle-piece icon-md"></i>
-                                                        <input type="text" class="form-control" name="search_<?php echo $newkey; ?>">
+                                                        <input type="text" class="form-control" name="search_<?php echo $newkey; ?>" value="">
                                                         <input type="hidden" name="custom#multidata#<?php echo $newkey; ?>">
                                                         <input type="hidden" name="key_<?php echo $newkey; ?>" value="<?php echo $key; ?>">
                                                         <input type="hidden" name="struct_<?php echo $newkey; ?>" value="<?php echo $struct; ?>">

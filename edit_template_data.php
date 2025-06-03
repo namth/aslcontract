@@ -64,6 +64,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
         } else if (strpos($key, 'multi_key') !== false) {
             $multiblockid       = substr($key, 10);
             $replace_field      = $_POST['multi_key-' . $multiblockid];
+            $default_value      = $_POST['multi_default-' . $multiblockid];
             $first_datasource   = $_POST['first_datasource-' . $multiblockid];
             $first_field        = $_POST['first_field-' . $multiblockid];
             $first_seperator    = $_POST['first_seperator-' . $multiblockid];
@@ -75,6 +76,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
                     'seperator' => $first_seperator,
                 ],
                 'type' => 'multitext',
+                'default' => $default_value,
             ];
 
             $second_datasource  = $_POST['second_datasource-' . $multiblockid];
@@ -244,11 +246,13 @@ $options = ['text'=> 'Text', 'img' => 'Image', 'number' => 'Number'];
                                                 case 'multitext':
                                                     $firstID = $obj->first->dataID;
                                                     $secondID = $obj->second->dataID;
-                                                    echo '<div class="data_replace_box d-flex align-items-center justify-content-center flex-column gap-4 w-100" id="formula-1">
+                                                    echo '<div class="data_replace_box d-flex align-items-center justify-content-center flex-column gap-4 w-100" id="formula-' . $formula_count . '">
                                                             <div class="replace_area d-flex align-items-center flex-column justify-content-center gap-3">
                                                                 <div class="replace_field d-flex justify-content-center align-items-center p-2 gap-3">
                                                                     <i class="ph ph-diamonds-four icon-md"></i>
-                                                                    <input type="text" class="form-control w300" name="multi_key-1" placeholder="Nhập từ khóa sẽ thay thế trong file" value="{linkdata_1}">
+                                                                    <input type="text" class="form-control w300" name="multi_key-' . $formula_count . '" placeholder="Nhập từ khóa sẽ thay thế trong file" value="' . $key_replace . '">
+                                                                    <i class="ph ph-tree-structure icon-md"></i>
+                                                                    <input type="text" class="form-control w315" name="multi_default-' . $formula_count . '" placeholder="Nhập nội dung mặc định" value="' . (isset($obj->default) ? $obj->default : '') . '">
                                                                 </div>
                                                                 
                                                             </div>
@@ -296,7 +300,7 @@ $options = ['text'=> 'Text', 'img' => 'Image', 'number' => 'Number'];
                                     <a href="#" class="add_formula d-flex nav-link" data-custom="date"><i class="ph ph-calendar-plus icon-md"></i></a>
                                     <a href="#" class="add_formula d-flex nav-link" data-custom="blank"><i class="ph ph-align-left-simple icon-md"></i></a>
                                     <a href="#" class="add_formula d-flex nav-link" data-custom="multiblock"><i class="ph ph-diamonds-four icon-md"></i></a>
-                                    <input type="hidden" name="formula_count" id="formula_count" value="0">
+                                    <input type="hidden" name="formula_count" id="formula_count" value="<?php echo $formula_count; ?>">
                                     <input type="hidden" name="multi_datasource">
                                 </div>
                                 <div id="list_datasource" class="justify-content-center w-100 gap-3" style="display: none;">

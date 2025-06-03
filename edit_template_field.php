@@ -21,7 +21,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
     $templateName = $_POST['templateName'];
     $tagID = $_POST['tagID'];
     $google_fileID = $_POST['google_fileID'];
-    $googleFolderID = $_POST['googleFolderID'];
+    $googleTagID = $_POST['googleTagID'];
     $gDestinationFilename = $_POST['gDestinationFilename'];
 
     if (!$templateName) {
@@ -34,9 +34,9 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
         $notification = 'Google File ID không được để trống';
     }
 
-    if (!$googleFolderID) {
+    if (!$googleTagID) {
         $error = true;
-        $notification = 'Google Folder ID không được để trống';
+        $notification = 'Thư mục Google đích không được để trống';
     }
 
     if (!$gDestinationFilename) {
@@ -52,7 +52,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
                 'templateName' => $templateName,
                 'tagID' => $tagID,
                 'gFileID' => $google_fileID,
-                'gDestinationFolderID' => $googleFolderID,
+                'googleTagID' => $googleTagID,
                 'gDestinationFilename' => $gDestinationFilename,
                 'templateModified' => date('Y-m-d H:i:s')
             ),
@@ -124,8 +124,20 @@ get_header();
                                         value="<?php echo $template->gFileID; ?>">
                                 </div>
                                 <div class="form-group">
-                                    <label for="googleFolderID">Google Folder ID (Thư mục đích)</label>
-                                    <input type="text" class="form-control text-center" id="googleFolderID" name="googleFolderID" value="<?php echo $template->gDestinationFolderID; ?>">
+                                    <label for="googleTagID">Thư mục Google đích</label>
+                                    <select class="form-control js-example-basic-single" id="googleTagID" name="googleTagID">
+                                        <option value="">-- Chọn thư mục Google --</option>
+                                        <?php 
+                                            # get all Google tags from database and show here
+                                            $google_tags = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}asltags WHERE tagType = 'google'");
+                                            if ($google_tags) {
+                                                foreach ($google_tags as $google_tag) {
+                                                    $selected = ($template->googleTagID == $google_tag->tagID) ? 'selected' : '';
+                                                    echo '<option value="' . $google_tag->tagID . '" ' . $selected . '>' . $google_tag->tagName . '</option>';
+                                                }
+                                            }
+                                        ?>
+                                    </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="gDestinationFilename">Tên file sau khi tạo tự động</label>

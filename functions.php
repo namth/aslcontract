@@ -106,7 +106,7 @@ function createDatabase(){
         `tagID` mediumint(9) UNSIGNED NULL REFERENCES `{$asltags}`(`tagID`),
         `templateName` varchar(255) NOT NULL,
         `gFileID` varchar(255) NOT NULL,
-        `gDestinationFolderID` varchar(255) NULL,
+        `googleTagID` mediumint(9) UNSIGNED NULL REFERENCES `{$asltags}`(`tagID`),
         `gDestinationFilename` varchar(255) NULL,
         `userID` mediumint(9) UNSIGNED NULL,
         `templateModified` datetime NOT NULL,
@@ -133,7 +133,6 @@ function createDatabase(){
         `userID` mediumint(9) UNSIGNED NULL,
         `documentName` varchar(255) NOT NULL,
         `gFileID` varchar(255) NOT NULL,
-        `gDestinationFolderID` varchar(255) NULL,
         `documentModified` datetime NOT NULL,
         PRIMARY KEY  (documentID)
     ) $charset_collate;";

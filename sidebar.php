@@ -35,8 +35,8 @@
                                 'id'    => 'template',
                                 'submenu' => [
                                     [
-                                        'title' => 'Tạo thư mục mới',
-                                        'url'   => home_url('/add-new-folder'),
+                                        'title' => 'Quản lý thư mục google',
+                                        'url'   => home_url('/manage-tags?tagType=google'),
                                     ],
                                     [
                                         'title' => 'Quản lý thư mục',
@@ -93,6 +93,11 @@
                                 'url'   => get_author_posts_url($current_user_id),
                             ],
                             [
+                                'title' => 'Tài liệu hướng dẫn',
+                                'icon'  => 'mdi mdi-book-open-outline',
+                                'url'   => home_url('/documentation'),
+                            ],
+                            [
                                 'title' => 'WP Admin',
                                 'icon'  => 'mdi mdi-wordpress',
                                 'url'   => home_url('/wp-admin'),
@@ -145,6 +150,11 @@
                                 'title' => 'Tài khoản',
                                 'icon'  => 'mdi mdi-account-circle-outline',
                                 'url'   => get_author_posts_url($current_user_id),
+                            ],
+                            [
+                                'title' => 'Tài liệu hướng dẫn',
+                                'icon'  => 'mdi mdi-book-open-outline',
+                                'url'   => home_url('/documentation'),
                             ],
                             [
                                 'title' => 'Đăng xuất',

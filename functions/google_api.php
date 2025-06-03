@@ -70,11 +70,7 @@ function shareGoogleDriveItem($itemId, $email, $role = 'writer') {
     global $client; // Giả sử $client đã được khởi tạo và xác thực
 
     $service = new Google_Service_Drive($client);
-    $isShared = isFileSharedWithEmail($itemId, $email); // Kiểm tra xem email đã được chia sẻ chưa
-
-    if (isset($isShared['error'])) {
-        return ['success' => false, 'message' => 'Lỗi khi kiểm tra quyền chia sẻ: ' . $isShared['error']];
-    }
+    $isShared = isItemSharedWithEmail($itemId, $email); // Kiểm tra xem email đã được chia sẻ chưa
 
     if ($isShared['shared']) {
         return ['success' => true, 'message' => 'Email đã được chia sẻ trước đó.']; // Email đã được chia sẻ
@@ -97,31 +93,131 @@ function shareGoogleDriveItem($itemId, $email, $role = 'writer') {
     }
 }
 
-//Hàm kiểm tra quyền chia sẻ (đã được định nghĩa trước đó)
-function isFileSharedWithEmail($fileId, $email) {
-    global $client; 
-
+//Hàm kiểm tra quyền chia sẻ cho cả file và folder
+function isItemSharedWithEmail($itemId, $email) {
+    global $client;
     $service = new Google_Service_Drive($client);
-
+    
     try {
-        $permissions = $service->permissions->listPermissions($fileId, array(
-            'fields' => 'permissions(emailAddress, role)'
-        ));
-
-        foreach ($permissions->getPermissions() as $permission) {
-            if ($permission->getEmailAddress() == $email) {
-                return ['shared' => true, 'role' => $permission->getRole()];
+        // Bước 1: Kiểm tra quyền truy cập cơ bản trước
+        if (!canAccessItem($service, $itemId)) {
+            return [
+                'accessible' => false,
+                'shared' => false,
+                'role' => null,
+                'error' => 'No access to this item (may be private or not shared with current user)'
+            ];
+        }
+        
+        // Bước 2: Lấy thông tin item
+        $item = $service->files->get($itemId, array('fields' => 'mimeType, name, owners'));
+        $isFolder = ($item->getMimeType() === 'application/vnd.google-apps.folder');
+        
+        $result = [
+            'accessible' => true,
+            'shared' => false,
+            'role' => null,
+            'type' => $isFolder ? 'folder' : 'file',
+            'name' => $item->getName(),
+            'owners' => []
+        ];
+        
+        // Lấy thông tin owners
+        foreach ($item->getOwners() as $owner) {
+            $result['owners'][] = $owner->getEmailAddress();
+        }
+        
+        // Bước 3: Kiểm tra permissions (chỉ khi có quyền truy cập)
+        try {
+            $permissions = $service->permissions->listPermissions($itemId, array(
+                'fields' => 'permissions(emailAddress, role, type)'
+            ));
+            
+            foreach ($permissions->getPermissions() as $permission) {
+                // Kiểm tra email trực tiếp
+                if ($permission->getEmailAddress() == $email) {
+                    $result['shared'] = true;
+                    $result['role'] = $permission->getRole();
+                    $result['permission_type'] = $permission->getType();
+                    break;
+                }
+            }
+            
+        } catch (Google_Service_Exception $permE) {
+            // Nếu không thể lấy permissions, có thể do quyền hạn chế
+            if ($permE->getCode() == 403) {
+                $result['permission_check_error'] = 'Cannot access permission list - insufficient rights';
+                // Kiểm tra xem email có phải là owner không
+                if (in_array($email, $result['owners'])) {
+                    $result['shared'] = true;
+                    $result['role'] = 'owner';
+                    $result['permission_type'] = 'user';
+                }
+            } else {
+                throw $permE; // Re-throw nếu không phải lỗi 403
             }
         }
-        return ['shared' => false, 'role' => null]; 
-
+        
+        // Bước 4: Nếu là folder và chưa có quyền trực tiếp, kiểm tra quyền kế thừa
+        // if (!$result['shared'] && $isFolder) {
+        //     $result['inherited_permissions'] = checkInheritedPermissions($service, $itemId, $email);
+        // }
+        
+        return $result;
+        
     } catch (Google_Service_Exception $e) {
-        return ['error' => $e->getMessage()];
+        $errorCode = $e->getCode();
+        $errorMessage = $e->getMessage();
+        
+        // Xử lý các lỗi phổ biến
+        switch ($errorCode) {
+            case 403:
+                return [
+                    'accessible' => false,
+                    'shared' => false,
+                    'role' => null,
+                    'error' => 'Access denied - file/folder may be private or not shared with current user',
+                    'code' => 403
+                ];
+            case 404:
+                return [
+                    'accessible' => false,
+                    'shared' => false,
+                    'role' => null,
+                    'error' => 'File/folder not found or deleted',
+                    'code' => 404
+                ];
+            default:
+                return [
+                    'accessible' => false,
+                    'shared' => false,
+                    'role' => null,
+                    'error' => 'Google Drive API Error: ' . $errorMessage,
+                    'code' => $errorCode
+                ];
+        }
     } catch (Exception $e) {
-        return ['error' => $e->getMessage()];
+        return [
+            'accessible' => false,
+            'shared' => false,
+            'role' => null,
+            'error' => 'General Error: ' . $e->getMessage()
+        ];
     }
 }
 
+// Hàm kiểm tra khả năng truy cập item
+function canAccessItem($service, $itemId) {
+    try {
+        // Thử lấy thông tin cơ bản nhất
+        $service->files->get($itemId, array('fields' => 'id'));
+        return true;
+    } catch (Google_Service_Exception $e) {
+        return false;
+    } catch (Exception $e) {
+        return false;
+    }
+}
 
 /**
  * Hàm sao chép file trên Google Drive

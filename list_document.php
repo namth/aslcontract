@@ -10,21 +10,106 @@ $current_user_id = $current_user->ID;
 $your_staffs = get_staff_ids($current_user_id);
 # put current user id to $your_staffs array
 array_push($your_staffs, $current_user_id);
+
+# Get search and filter parameters
+$search_name = isset($_GET['search_name']) ? sanitize_text_field($_GET['search_name']) : '';
+$filter_tag = isset($_GET['filter_tag']) ? intval($_GET['filter_tag']) : '';
+$page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+$per_page = 20;
+$offset = ($page - 1) * $per_page;
 ?>
 <div class="content-wrapper">
     <div class="row">
         <div class="col-sm-12">
             <?php
-                $table_name = $wpdb->prefix . 'asldocument';
-                # get all documents where userID in $your_staffs array, and order by documentModified DESC
-                $documents = $wpdb->get_results("SELECT * FROM $table_name WHERE userID IN (" . implode(',', $your_staffs) . ") ORDER BY documentModified DESC");
+                # Build search and filter conditions
+                $where_conditions = ["d.userID IN (" . implode(',', $your_staffs) . ")"];
+                
+                if (!empty($search_name)) {
+                    $where_conditions[] = $wpdb->prepare("d.documentName LIKE %s", '%' . $wpdb->esc_like($search_name) . '%');
+                }
+                
+                if (!empty($filter_tag)) {
+                    $where_conditions[] = $wpdb->prepare("d.tagID = %d", $filter_tag);
+                }
+                
+                $where_clause = "WHERE " . implode(' AND ', $where_conditions);
+                
+                # Get total count for pagination
+                $total_documents = $wpdb->get_var("
+                    SELECT COUNT(*) 
+                    FROM {$wpdb->prefix}asldocument d 
+                    LEFT JOIN {$wpdb->prefix}asltags t ON d.tagID = t.tagID 
+                    $where_clause
+                ");
+                
+                # Calculate pagination
+                $total_pages = ceil($total_documents / $per_page);
+                
+                # Get documents with tags for current page
+                $documents = $wpdb->get_results($wpdb->prepare("
+                    SELECT d.*, t.tagName, t.tagType 
+                    FROM {$wpdb->prefix}asldocument d 
+                    LEFT JOIN {$wpdb->prefix}asltags t ON d.tagID = t.tagID 
+                    $where_clause 
+                    ORDER BY d.documentModified DESC 
+                    LIMIT %d OFFSET %d
+                ", $per_page, $offset));
+                
+                # Get all Google tags for filter dropdown (only Google type tags)
+                $all_tags = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}asltags WHERE tagType = 'google' ORDER BY tagName");
  
-                # if have tags, then show list of tags
-                echo '<div class="d-flex justify-content-between align-items-center mb-3">
+                # Header with title, tag filter, and search
+                echo '<div class="d-flex justify-content-between align-items-center mb-4">
                         <div class="d-flex justify-content-between align-items-center w-100">
                             <h4 class="display-4">Danh sách file đã tạo</h4>
+                            <div class="d-flex align-items-center gap-3">
+                                <!-- Tag Filter -->
+                                <div class="d-flex align-items-center">
+                                    <i class="ph ph-tag me-2 text-muted fa-150p"></i>
+                                    <select class="form-control" id="filter_tag" name="filter_tag" onchange="filterByTag(this.value)" style="min-width: 200px;">
+                                        <option value="">-- Tất cả Google Folder --</option>';
+                                        
+                foreach ($all_tags as $tag) {
+                    $selected = ($filter_tag == $tag->tagID) ? 'selected' : '';
+                    echo '<option value="' . $tag->tagID . '" ' . $selected . '>' . esc_html($tag->tagName) . '</option>';
+                }
+                
+                echo '                  </select>
+                                </div>
+                                <!-- Search -->
+                                <form method="GET" class="d-flex align-items-center" id="searchForm">
+                                    <input type="hidden" name="filter_tag" value="' . esc_attr($filter_tag) . '">
+                                    <div class="d-flex align-items-center" style="min-width: 300px;">
+                                        <i class="ph ph-magnifying-glass fa-150p me-2"></i>
+                                        <input type="text" class="form-control" name="search_name" 
+                                               value="' . esc_attr($search_name) . '" 
+                                               placeholder="Tìm kiếm theo tên file..."
+                                               onkeypress="handleEnterKey(event)">
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
+                    
+                    <script>
+                    function filterByTag(tagID) {
+                        const searchName = document.querySelector(\'input[name="search_name"]\').value;
+                        const url = new URL(window.location.href);
+                        url.searchParams.set(\'filter_tag\', tagID);
+                        url.searchParams.set(\'search_name\', searchName);
+                        url.searchParams.delete(\'paged\'); // Reset to first page
+                        window.location.href = url.toString();
+                    }
+                    
+                    function handleEnterKey(event) {
+                        if (event.key === \'Enter\') {
+                            event.preventDefault();
+                            document.getElementById(\'searchForm\').submit();
+                        }
+                    }
+                    </script>
+                    
                     <div class="d-flex gap-3 flex-column">';
 
                 if ($documents) {
@@ -51,6 +136,12 @@ array_push($your_staffs, $current_user_id);
                                     <i class="ph ph-user me-1"></i>
                                     <small><?php echo "<a href='$user_link' class='nav-link'>" . $document_user->display_name . "</a>"; ?></small>
                                 </div>
+                                <?php if ($document->tagName): ?>
+                                <div class="p-2 d-flex align-items-center card-subtitle">
+                                    <i class="ph ph-tag me-1"></i>
+                                    <small><?php echo esc_html($document->tagName); ?></small>
+                                </div>
+                                <?php endif; ?>
                                 <div class="d-flex justify-content-between align-items-center gap-2">
                                     <a href="<?php echo home_url('/googledrive/?action=view&documentID=' . $document->documentID); ?>" class="nav-link fa-150p" target="_blank">
                                         <i class="ph ph-eye me-2"></i>
@@ -70,8 +161,85 @@ array_push($your_staffs, $current_user_id);
                         <?php
                     }
                 } else {
-                    echo '<i>Chưa có file nào được tạo</i>';
+                    echo '<div class="text-center p-4">
+                            <i class="ph ph-file-x fa-300p text-muted mb-3"></i>
+                            <p class="text-muted">Chưa có file nào được tạo</p>
+                          </div>';
                 }
+                
+                # Pagination
+                if ($total_pages > 1) {
+                    echo '<div class="d-flex justify-content-center mt-4">
+                            <nav aria-label="Document pagination">
+                                <ul class="pagination">';
+                    
+                    # Previous button
+                    if ($page > 1) {
+                        $prev_url = add_query_arg(array('paged' => $page - 1, 'search_name' => $search_name, 'filter_tag' => $filter_tag), home_url('/list-document'));
+                        echo '<li class="page-item">
+                                <a class="page-link" href="' . esc_url($prev_url) . '">
+                                    <i class="ph ph-caret-left"></i> Trước
+                                </a>
+                              </li>';
+                    }
+                    
+                    # Page numbers
+                    $start_page = max(1, $page - 2);
+                    $end_page = min($total_pages, $page + 2);
+                    
+                    if ($start_page > 1) {
+                        $first_url = add_query_arg(array('paged' => 1, 'search_name' => $search_name, 'filter_tag' => $filter_tag), home_url('/list-document'));
+                        echo '<li class="page-item">
+                                <a class="page-link" href="' . esc_url($first_url) . '">1</a>
+                              </li>';
+                        if ($start_page > 2) {
+                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        }
+                    }
+                    
+                    for ($i = $start_page; $i <= $end_page; $i++) {
+                        $page_url = add_query_arg(array('paged' => $i, 'search_name' => $search_name, 'filter_tag' => $filter_tag), home_url('/list-document'));
+                        $active = ($i == $page) ? 'active' : '';
+                        echo '<li class="page-item ' . $active . '">
+                                <a class="page-link" href="' . esc_url($page_url) . '">' . $i . '</a>
+                              </li>';
+                    }
+                    
+                    if ($end_page < $total_pages) {
+                        if ($end_page < $total_pages - 1) {
+                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        }
+                        $last_url = add_query_arg(array('paged' => $total_pages, 'search_name' => $search_name, 'filter_tag' => $filter_tag), home_url('/list-document'));
+                        echo '<li class="page-item">
+                                <a class="page-link" href="' . esc_url($last_url) . '">' . $total_pages . '</a>
+                              </li>';
+                    }
+                    
+                    # Next button
+                    if ($page < $total_pages) {
+                        $next_url = add_query_arg(array('paged' => $page + 1, 'search_name' => $search_name, 'filter_tag' => $filter_tag), home_url('/list-document'));
+                        echo '<li class="page-item">
+                                <a class="page-link" href="' . esc_url($next_url) . '">
+                                    Tiếp <i class="ph ph-caret-right"></i>
+                                </a>
+                              </li>';
+                    }
+                    
+                    echo '      </ul>
+                            </nav>
+                          </div>';
+                }
+                
+                # Show pagination info at the bottom
+                if ($total_documents > 0) {
+                    echo '<div class="d-flex justify-content-center mt-3">
+                            <div class="text-muted">
+                                Hiển thị ' . (($page - 1) * $per_page + 1) . '-' . min($page * $per_page, $total_documents) . ' 
+                                trong tổng số ' . $total_documents . ' file
+                            </div>
+                          </div>';
+                }
+                
                 echo '</div>';
             ?>
         </div>

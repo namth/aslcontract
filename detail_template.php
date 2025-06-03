@@ -54,6 +54,12 @@ $create_user = get_userdata($template->userID);
 
                             # get tag name from asltag table by tagID
                             $tag = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltags WHERE tagID = $template->tagID");
+                            
+                            # get Google tag information for destination folder
+                            $googleTag = null;
+                            if ($template->googleTagID) {
+                                $googleTag = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltags WHERE tagID = $template->googleTagID");
+                            }
 
                             echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-folder me-2'></i>Thư mục:</b> " . $tag->tagName . "</span>";
 
@@ -76,21 +82,26 @@ $create_user = get_userdata($template->userID);
                                     $fileViewLink = 'https://docs.google.com/document/d/' . $template->gFileID . '/edit';
                                 }
                                 
-                                // Get view link for Google folder
-                                try {
-                                    $folder = $service->files->get($template->gDestinationFolderID, array(
-                                        'fields' => 'webViewLink'
-                                    ));
-                                    if (isset($folder->webViewLink)) {
-                                        $folderViewLink = $folder->webViewLink;
+                                // Get view link for Google folder using Google tag
+                                if ($googleTag && $googleTag->googleFileID) {
+                                    try {
+                                        $folder = $service->files->get($googleTag->googleFileID, array(
+                                            'fields' => 'webViewLink'
+                                        ));
+                                        if (isset($folder->webViewLink)) {
+                                            $folderViewLink = $folder->webViewLink;
+                                        }
+                                    } catch (Exception $e) {
+                                        // If error, fallback to direct link
+                                        $folderViewLink = 'https://drive.google.com/drive/folders/' . $googleTag->googleFileID;
                                     }
-                                } catch (Exception $e) {
-                                    // If error, fallback to direct link
-                                    $folderViewLink = 'https://drive.google.com/drive/folders/' . $template->gDestinationFolderID;
+                                    
+                                    echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-file-cloud me-2'></i>Google File ID:</b> <a href='" . $fileViewLink . "' target='_blank' title='Mở file Google' class='d-flex align-items-center gap-3 nav-link'>" . $template->gFileID . " <i class='ph-bold ph-arrow-square-out'></i></a></span>";
+                                    echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-cloud-arrow-up me-2'></i>Thư mục Google đích:</b> <a href='" . $folderViewLink . "' target='_blank' title='Mở thư mục Google' class='d-flex align-items-center gap-3 nav-link'>" . $googleTag->tagName . " <i class='ph-bold ph-arrow-square-out'></i></a></span>";
+                                } else {
+                                    echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-file-cloud me-2'></i>Google File ID:</b> <a href='" . $fileViewLink . "' target='_blank' title='Mở file Google' class='d-flex align-items-center gap-3 nav-link'>" . $template->gFileID . " <i class='ph-bold ph-arrow-square-out'></i></a></span>";
+                                    echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-cloud-arrow-up me-2'></i>Thư mục Google đích:</b> Chưa được thiết lập</span>";
                                 }
-                                
-                                echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-file-cloud me-2'></i>Google File ID:</b> <a href='" . $fileViewLink . "' target='_blank' title='Mở file Google' class='d-flex align-items-center gap-3 nav-link'>" . $template->gFileID . " <i class='ph-bold ph-arrow-square-out'></i></a></span>";
-                                echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-cloud-arrow-up me-2'></i>Google ID thư mục đích:</b> <a href='" . $folderViewLink . "' target='_blank' title='Mở thư mục Google' class='d-flex align-items-center gap-3 nav-link'>" . $template->gDestinationFolderID . " <i class='ph-bold ph-arrow-square-out'></i></a></span>";
                             }
                             echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-chat-teardrop-text me-2'></i>Tên file mẫu:</b> " . $template->gDestinationFilename . "</span>";
                             echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-user me-2'></i>Người tạo:</b> " . $create_user->display_name . "</span>";

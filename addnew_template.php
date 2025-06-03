@@ -11,7 +11,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
     $error = false;
     $templateName = $_POST['templateName'];
     $google_fileID = getGoogleIdFromUrl($_POST['google_fileID']);
-    $googleFolderID = getGoogleIdFromUrl($_POST['googleFolderID']);
+    $googleTagID = $_POST['googleTagID'];
     $gDestinationFilename = $_POST['gDestinationFilename'];
     $tagID = $_POST['tagID'];
 
@@ -27,9 +27,10 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
         $error = true;
     }
 
-    # googleFolderID is required, if not have, then show error message
-    if (empty($googleFolderID)) {
-        $notification = 'Google Folder ID không được để trống';
+    # googleTagID is required, if not have, then show error message
+    $googleTagID = $_POST['googleTagID'];
+    if (empty($googleTagID)) {
+        $notification = 'Thư mục Google đích không được để trống';
         $error = true;
     }
 
@@ -84,6 +85,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
         } else if (strpos($key, 'multi_key') !== false) {
             $multiblockid       = substr($key, 10);
             $replace_field      = $_POST['multi_key-' . $multiblockid];
+            $default_value      = $_POST['multi_default-' . $multiblockid];
             $first_datasource   = $_POST['first_datasource-' . $multiblockid];
             $first_field        = $_POST['first_field-' . $multiblockid];
             $first_seperator    = $_POST['first_seperator-' . $multiblockid];
@@ -95,6 +97,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
                     'seperator' => $first_seperator,
                 ],
                 'type' => 'multitext',
+                'default' => $default_value,
             ];
 
             $second_datasource  = $_POST['second_datasource-' . $multiblockid];
@@ -124,17 +127,13 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
                 'templateName' => $templateName,
                 'tagID' => $tagID,
                 'gFileID' => $google_fileID,
-                'gDestinationFolderID' => $googleFolderID,
+                'googleTagID' => $googleTagID,
                 'gDestinationFilename' => $gDestinationFilename,
                 'userID' => $current_user_id,
                 'templateModified' => current_time('mysql'),
             )
         );
 
-        # share file to GG_APP_EMAIL
-        shareGoogleDriveItem($google_fileID, GG_APP_EMAIL);
-        shareGoogleDriveItem($googleFolderID, GG_APP_EMAIL);
-        
         # if $data_replace is not empty, then insert data to database
         if ($data_replace) {
             $templateID = $wpdb->insert_id;
@@ -317,11 +316,21 @@ get_header();
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="statistics-details d-flex flex-row gap-3 flex-wrap">
-                                        
-                                        <div class="d-flex justify-content-center align-items-center w-100 gap-3">
-                                            <label for="googleFolderID" class="w165 text-right">Google Folder ID (Thư mục đích)</label>
-                                            <input type="text" class="form-control mxw300" id="googleFolderID" name="googleFolderID">
-                                        </div>
+                                                         <div class="d-flex justify-content-center align-items-center w-100 gap-3">
+                            <label for="googleTagID" class="w165 text-right">Thư mục Google đích</label>
+                            <select class="form-control js-example-basic-single w300" id="googleTagID" name="googleTagID">
+                                <option value="">-- Chọn thư mục Google --</option>
+                                <?php 
+                                    # get all Google tags from database and show here
+                                    $google_tags = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}asltags WHERE tagType = 'google'");
+                                    if ($google_tags) {
+                                        foreach ($google_tags as $google_tag) {
+                                            echo '<option value="' . $google_tag->tagID . '">' . $google_tag->tagName . '</option>';
+                                        }
+                                    }
+                                ?>
+                            </select>
+                        </div>
                                         <div class="d-flex justify-content-center align-items-center w-100 gap-3">
                                             <label for="gDestinationFilename" class="w165 text-right">Tên file sau khi tạo tự động</label>
                                             <input type="text" class="form-control mxw300" id="gDestinationFilename" name="gDestinationFilename">

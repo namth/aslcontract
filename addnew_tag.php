@@ -15,7 +15,7 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
     $tagDescription = $_POST['tagDescription'];
     $tagModified = date('Y-m-d H:i:s');
     $tagType = isset($_POST['tagType']) ? sanitize_text_field($_POST['tagType']) : 'normal';
-    $googleFileID = ($tagType === 'google') ? sanitize_text_field($_POST['googleFileID']) : '';
+    $googleFileID = ($tagType === 'google') ? getGoogleIdFromUrl($_POST['googleFileID']) : '';
 
     # tagName is required, if not have, then show error message
     if (empty($tagName)) {
@@ -46,8 +46,13 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
         if ($wpdb->last_error) {
             $notification = 'Thêm thư mục thất bại';
         } else {
+            # Share file to GG_APP_EMAIL if it's a Google tag with a file ID
+            // if ($tagType === 'google' && !empty($googleFileID)) {
+                shareGoogleDriveItem($googleFileID, GG_APP_EMAIL);
+            // }
             # redirect to list tag page
-            wp_redirect(home_url('/list-folder'));
+            $redirectUrl = add_query_arg('tagType', $tagType, home_url('/manage-tags'));
+            wp_redirect($redirectUrl);
             exit;
         }
     } 

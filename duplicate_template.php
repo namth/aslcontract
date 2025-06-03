@@ -23,7 +23,7 @@ if (isset($_POST['duplicate_template_field']) && wp_verify_nonce($_POST['duplica
     $templateName = $_POST['templateName'];
     $tagID = $_POST['tagID'];
     $google_fileID = $_POST['google_fileID'];
-    $googleFolderID = $_POST['googleFolderID'];
+    $googleTagID = $_POST['googleTagID'];
     $gDestinationFilename = $_POST['gDestinationFilename'];
     
     # validate input fields
@@ -37,8 +37,8 @@ if (isset($_POST['duplicate_template_field']) && wp_verify_nonce($_POST['duplica
         $error = true;
     }
 
-    if (empty($googleFolderID)) {
-        $notification = 'Google Folder ID không được để trống';
+    if (empty($googleTagID)) {
+        $notification = 'Google Tag không được để trống';
         $error = true;
     }
 
@@ -56,7 +56,7 @@ if (isset($_POST['duplicate_template_field']) && wp_verify_nonce($_POST['duplica
                 'templateName' => $templateName,
                 'tagID' => $tagID,
                 'gFileID' => $google_fileID,
-                'gDestinationFolderID' => $googleFolderID,
+                'googleTagID' => $googleTagID,
                 'gDestinationFilename' => $gDestinationFilename,
                 'userID' => $current_user_id,
                 'templateModified' => current_time('mysql'),
@@ -150,9 +150,24 @@ get_header();
                                     <input type="text" class="form-control text-center" id="google_fileID" name="google_fileID"
                                         value="<?php echo $template->gFileID; ?>">
                                 </div>
-                                <div class="form-group">
-                                    <label for="googleFolderID">Google Folder ID (Thư mục đích)</label>
-                                    <input type="text" class="form-control text-center" id="googleFolderID" name="googleFolderID" value="<?php echo $template->gDestinationFolderID; ?>">
+                                <div class="form-group d-flex flex-column justify-content-center align-items-center">
+                                    <label for="googleTagID">Google Tag (Thư mục đích)</label>
+                                    <select class="form-control js-example-basic-single" id="googleTagID" name="googleTagID">
+                                        <option value="">-- Chọn Google Tag --</option>
+                                        <?php 
+                                            # get all Google tags from database
+                                            $google_tags = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}asltags WHERE tagType = 'google'");
+                                            if ($google_tags) {
+                                                foreach ($google_tags as $gtag) {
+                                                    if ($template->googleTagID == $gtag->tagID) {
+                                                        echo '<option value="' . $gtag->tagID . '" selected>' . $gtag->tagName . '</option>';
+                                                    } else {
+                                                        echo '<option value="' . $gtag->tagID . '">' . $gtag->tagName . '</option>';
+                                                    }
+                                                }
+                                            }
+                                        ?>
+                                    </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="gDestinationFilename">Tên file sau khi tạo tự động</label>

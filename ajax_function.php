@@ -171,7 +171,9 @@ function add_formula() {
                     <div class="replace_area d-flex align-items-center flex-column justify-content-center gap-3">
                         <div class="replace_field d-flex justify-content-center align-items-center p-2 gap-3">
                             <i class="ph ph-diamonds-four icon-md"></i>
-                            <input type="text" class="form-control w300" name="multi_key-' . $formula_count . '" placeholder="Nhập từ khóa sẽ thay thế trong file" value="{linkdata_' . $formula_count . '}">
+                            <input type="text" class="form-control w198" name="multi_key-' . $formula_count . '" placeholder="Nhập từ khóa sẽ thay thế trong file" value="{linkdata_' . $formula_count . '}">
+                            <i class="ph ph-tree-structure icon-md"></i>
+                            <input type="text" class="form-control w315" name="multi_default-' . $formula_count . '" placeholder="Nhập nội dung mặc định">
                         </div>
                         <div id="list_datasource" class="flex-column align-items-center gap-3">
                             <div class="d-flex justify-content-center flex-wrap gap-3">
@@ -291,66 +293,6 @@ function echo_multiblock($formula_count, $firstID, $secondID, object $current_da
 /* 
 * File: main.js, create_document.php
 */
-/* add_action('wp_ajax_choose_date', 'choose_date');
-
-function choose_date(){
-    global $wpdb;
-
-    $childID = $_POST['childID'];
-    $selectdate = explode('/', $_POST['selectdate']);
-    $templateID = $_POST['templateID'];
-
-    # get child datasource by childID
-    $table_name = $wpdb->prefix . 'aslchilddatasource';
-    $childdatasource = $wpdb->get_row("SELECT * FROM $table_name WHERE childID = $childID");
-    
-    $replacement = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslreplacement WHERE templateID = $templateID AND childID = $childID");
-    
-    # get data from sql
-    $table_name = $wpdb->prefix . $childdatasource->api;
-    $field_array = explode(',', $childdatasource->header);
-
-    $date_data = array_combine($field_array, $selectdate);
-    $data_replace = json_decode($replacement->dataReplace, true);
-    # replace value in $data_replace with $date_data
-    foreach($data_replace as $key => $value){
-        $data_replace[$key] = $date_data[$value];
-    }
-
-    if(!empty($selectdate)){
-        echo '  <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th> # </th>';
-        foreach($data_replace as $key => $value){
-            echo '              <th>' . $key . '</th>';
-        }
-        echo '              </tr>
-                        </thead>
-                        <tbody>';
-
-        echo '              <tr class="select_data">
-                                <td class="py-1">
-                                    <i class="ph ph-calendar icon-md"></i>
-                                </td>';
-        foreach($data_replace as $key => $value){
-            echo '              <td>' . $value . '</td>';
-        }
-        echo '              </tr>
-                        </tbody>
-                    </table>
-                </div>';
-    } else {
-        echo '<div class="alert alert-danger d-flex align-items-center" role="alert"><i class="ph ph-funnel-x me-2 fa-150p"></i> Không tìm thấy dữ liệu</div>';
-    }
-    exit;
-} */
-
-
-/* 
-* File: main.js, create_document.php
-*/
 add_action('wp_ajax_search_data', 'search_data');
 
 function search_data(){
@@ -372,15 +314,19 @@ function search_data(){
     switch($datasource->type){
         case 'aslapi':
             # get data from api
-            $get_header_api = $datasource->api . '/wp-json/qlcv/v1/asldata/' . $childdatasource->api . '?field=' . $childdatasource->header;
+            $get_header_api = $datasource->api . '/wp-json/qlcv/v1/aslpostdata/';
 
             # create search query string
             $field_array = explode(',', $childdatasource->searchfield);
-            $search_query_arr = [];
-            foreach($field_array as $field){
-                $search_query_arr[] = $field . ' LIKE "%' . $search . '%"';
-            }
-            $search_query = "&where=(" . implode(' OR ', $search_query_arr) . ")&limit=5";
+            // if (!empty($search)) {
+            //     $search_query_arr = [];
+            //     foreach($field_array as $field){
+            //         $search_query_arr[] = $field . ' LIKE "%' . $search . '%"';
+            //     }
+            //     $search_query = "&where=(" . implode(' OR ', $search_query_arr) . ")&limit=5";
+            // } else {
+            //     $search_query = "&limit=5";
+            // }
 
             # get token and call api
             $token = $datasource->token;
@@ -394,9 +340,19 @@ function search_data(){
                 # update token to database
                 $wpdb->update("{$wpdb->prefix}asldatasource", ['token' => $token], ['sourceID' => $datasource->sourceID]);
             }
-            $search_result = asl_api($get_header_api . $search_query, $token, 'GET');
+
+            $body = array(
+                'table' => $childdatasource->api,
+                'field' => $childdatasource->header,
+                'search' => $search,
+                'limit' => 5,
+            );
+
+            $search_result = asl_api($get_header_api, $token, 'POST', json_encode($body));
 
             $results = json_decode($search_result);
+
+            // print_r($results);
             # show search result
             if(!empty($results)){
                 echo '<div class="table-responsive">
@@ -569,7 +525,16 @@ function create_document() {
         $templateID = $_POST['templateID'];
         $template = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltemplate WHERE templateID = $templateID");
         $sourceFileId = $template->gFileID;
-        $folderId = $template->gDestinationFolderID;
+        
+        # Get Google folder ID from associated Google tag
+        $folderId = null;
+        if ($template->googleTagID) {
+            $googleTag = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}asltags WHERE tagID = $template->googleTagID");
+            if ($googleTag && $googleTag->googleFileID) {
+                $folderId = $googleTag->googleFileID;
+            }
+        }
+        
         $current_user = wp_get_current_user();
         $transformer = new Transformer();
     
@@ -771,7 +736,7 @@ function create_document() {
                 'userID' => get_current_user_id(),
                 'documentName' => $newfilename,
                 'gFileID' => $copyfileID,
-                'gDestinationFolderID' => $folderId,
+                'tagID' => $template->googleTagID,
                 'documentModified' => current_time('mysql'),
             ]);
     
@@ -809,61 +774,94 @@ function search_multidata() {
     $struct = json_decode(asl_encrypt($_POST['struct'], 'd'));
     $search = $_POST['search'];
     $key = $_POST['key'];
+    $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+    $items_per_page = 10; // số items mỗi trang
+    $offset = ($page - 1) * $items_per_page;
 
     $first_dataID = $struct->first->dataID;
     $second_dataID = $struct->second->dataID;
     $second_field = $struct->second->field;
     $link = $struct->link;
 
-
+    // Bước 1: Tìm kiếm dữ liệu trong bảng đầu tiên
     $table_name = $wpdb->prefix . 'aslchilddatasource';
-    $childdatasource = $wpdb->get_row("SELECT * FROM $table_name WHERE childID = $second_dataID");
-
-    // # get data from sql
-    $table_name = $wpdb->prefix . $childdatasource->api;
-    $field_array = explode(',', $childdatasource->searchfield);
-    $search_query_arr = [];
-    foreach($field_array as $field){
-        $search_query_arr[] = $field . ' LIKE "%' . $search . '%"';
+    $first_childdatasource = $wpdb->get_row("SELECT * FROM $table_name WHERE childID = $first_dataID");
+    
+    // Lấy dữ liệu từ bảng đầu tiên với điều kiện tìm kiếm
+    $first_table_name = $wpdb->prefix . $first_childdatasource->api;
+    $first_field_array = explode(',', $first_childdatasource->searchfield);
+    
+    $first_search_query_arr = [];
+    foreach($first_field_array as $field){
+        $field = trim($field);
+        $first_search_query_arr[] = $field . ' LIKE "%' . $search . '%"';
     }
-    $search_query = "WHERE " . implode(' OR ', $search_query_arr) . " LIMIT 15";
-    $search_result = $wpdb->get_results("SELECT * FROM $table_name $search_query");
+    $first_search_query = "WHERE " . implode(' OR ', $first_search_query_arr) . " LIMIT 5";
+    $first_results = $wpdb->get_results("SELECT * FROM $first_table_name $first_search_query");
 
-    # show search result
-    // print_r($search_result);
+    if(empty($first_results)){
+        echo '<div class="alert alert-danger d-flex align-items-center" role="alert"><i class="ph ph-funnel-x me-2 fa-150p"></i> Không tìm thấy dữ liệu</div>';
+        exit;
+    }
 
-    $lastID = 0;
-    # show search result
-    if(!empty($search_result)){
+    // Bước 2: Lấy các ID từ kết quả bảng đầu tiên để tìm kiếm trong bảng thứ hai
+    $link_ids = [];
+    foreach($first_results as $first_result){
+        $first_data = (array) $first_result;
+        $link_ids[] = $first_data[$link];
+    }
+
+    // Lấy thông tin bảng thứ hai
+    $second_childdatasource = $wpdb->get_row("SELECT * FROM $table_name WHERE childID = $second_dataID");
+    $second_table_name = $wpdb->prefix . $second_childdatasource->api;
+    $second_field_array = explode(',', $second_childdatasource->searchfield);
+
+    // Đếm tổng số records trong bảng thứ hai với điều kiện
+    $count_query = "SELECT COUNT(*) as total FROM $second_table_name WHERE $link IN (" . implode(',', $link_ids) . ")";
+    $total_count = $wpdb->get_var($count_query);
+    $total_pages = ceil($total_count / $items_per_page);
+
+    // Lấy dữ liệu bảng thứ hai với phân trang
+    $second_query = "SELECT * FROM $second_table_name WHERE $link IN (" . implode(',', $link_ids) . ") ORDER BY $link LIMIT $items_per_page OFFSET $offset";
+    $second_results = $wpdb->get_results($second_query);
+
+    # Hiển thị kết quả
+    if(!empty($second_results)){
         echo '<div id="select_multidata_form">';
         echo '<div class="table-responsive">
                     <table class="table">
                         <thead>
                         <tr>
                             <th> # </th>';
-        foreach($field_array as $field){
-            echo '<th>' . $field . '</th>';
+        
+        // Hiển thị header cho bảng thứ hai
+        foreach($second_field_array as $field){
+            echo '<th>' . trim($field) . '</th>';
         }
         echo '              <th></th>
                         </tr>
                         </thead>
                         <tbody>';
 
-        foreach($search_result as $result){
+        $lastID = 0;
+        $first_data_cache = []; // Cache để tránh query lặp lại
+
+        foreach($second_results as $result){
             $data = (array) $result;
             $select_data = str_replace(array_keys($data), array_values($data), $second_field);
             $parentID = $data[$link];
             
+            // Hiển thị header của bảng đầu tiên khi parentID thay đổi
             if ($parentID != $lastID) {
                 $lastID = $parentID;
                 
-                # get data from first dataID
-                $table_name = $wpdb->prefix . 'aslchilddatasource';
-                $childdatasource = $wpdb->get_row("SELECT * FROM $table_name WHERE childID = $first_dataID");
-
-                $table_name = $wpdb->prefix . $childdatasource->api;
-                $first_field_array = explode(',', $childdatasource->searchfield);
-                $first_data_row = $wpdb->get_row("SELECT * FROM $table_name WHERE $link = $parentID");
+                // Lấy dữ liệu từ cache hoặc query nếu chưa có
+                if (!isset($first_data_cache[$parentID])) {
+                    $first_data_row = $wpdb->get_row("SELECT * FROM $first_table_name WHERE $link = $parentID");
+                    $first_data_cache[$parentID] = $first_data_row;
+                } else {
+                    $first_data_row = $first_data_cache[$parentID];
+                }
 
                 echo '          <tr class="table-warning ">
                                     <td class="py-1">
@@ -871,20 +869,20 @@ function search_multidata() {
                                     </td>';
                 foreach($first_field_array as $field){
                     $field = trim($field);
-                    echo '          <td>' . $first_data_row->$field . '</td>';
+                    echo '          <td>' . (isset($first_data_row->$field) ? $first_data_row->$field : '') . '</td>';
                 }
                 echo '              <td></td>
                                 </tr>';
-
             }
 
+            // Hiển thị dữ liệu bảng thứ hai
             echo '          <tr class="multiselect_data" data-multiselect="' . $select_data . '" data-parentid="' . $parentID . '" data-key="' . $key . '">
                                 <td class="py-1">
                                     <i class="ph ph-file-magnifying-glass icon-md"></i>
                                 </td>';
-            foreach($field_array as $field){
+            foreach($second_field_array as $field){
                 $field = trim($field);
-                echo '          <td>' . $data[$field] . '</td>';
+                echo '          <td>' . (isset($data[$field]) ? $data[$field] : '') . '</td>';
             }
             echo '              <td>
                                     <i class="ph ph-hand-pointing fa-150p"></i>
@@ -895,7 +893,80 @@ function search_multidata() {
         echo '          </tbody>
                     </table>
                 </div>';
-        echo '</div>';
+
+        // Thêm phân trang
+        // if($total_pages > 1){
+        //     echo '<div class="d-flex justify-content-center align-items-center mt-3">
+        //             <nav aria-label="Page navigation">
+        //                 <ul class="pagination">';
+            
+        //     // Nút Previous
+        //     if($page > 1){
+        //         echo '<li class="page-item">
+        //                 <a class="page-link multidata-page" href="#" data-page="' . ($page - 1) . '" data-search="' . $search . '" data-key="' . $key . '" data-struct="' . $_POST['struct'] . '">
+        //                     <i class="ph ph-caret-left"></i>
+        //                 </a>
+        //               </li>';
+        //     }
+            
+        //     // Các số trang
+        //     $start_page = max(1, $page - 2);
+        //     $end_page = min($total_pages, $page + 2);
+            
+        //     for($i = $start_page; $i <= $end_page; $i++){
+        //         $active_class = ($i == $page) ? 'active' : '';
+        //         echo '<li class="page-item ' . $active_class . '">
+        //                 <a class="page-link multidata-page" href="#" data-page="' . $i . '" data-search="' . $search . '" data-key="' . $key . '" data-struct="' . $_POST['struct'] . '">' . $i . '</a>
+        //               </li>';
+        //     }
+            
+        //     // Nút Next
+        //     if($page < $total_pages){
+        //         echo '<li class="page-item">
+        //                 <a class="page-link multidata-page" href="#" data-page="' . ($page + 1) . '" data-search="' . $search . '" data-key="' . $key . '" data-struct="' . $_POST['struct'] . '">
+        //                     <i class="ph ph-caret-right"></i>
+        //                 </a>
+        //               </li>';
+        //     }
+            
+        //     echo '      </ul>
+        //             </nav>
+        //             <div class="ms-3">
+        //                 <small class="text-muted">Trang ' . $page . ' / ' . $total_pages . ' (Tổng: ' . $total_count . ' kết quả)</small>
+        //             </div>
+        //           </div>';
+        // }
+        
+        // echo '</div>';
+        
+        // // Thêm JavaScript để xử lý phân trang
+        // echo '<script>
+        // $(document).ready(function(){
+        //     $(".multidata-page").click(function(e){
+        //         e.preventDefault();
+        //         var page = $(this).data("page");
+        //         var search = $(this).data("search");
+        //         var key = $(this).data("key");
+        //         var struct = $(this).data("struct");
+                
+        //         $.ajax({
+        //             url: ajax_url,
+        //             type: "POST",
+        //             data: {
+        //                 action: "search_multidata",
+        //                 search: search,
+        //                 key: key,
+        //                 struct: struct,
+        //                 page: page
+        //             },
+        //             success: function(response){
+        //                 $("#select_multidata_form").parent().html(response);
+        //             }
+        //         });
+        //     });
+        // });
+        // </script>';
+        
     } else {
         echo '<div class="alert alert-danger d-flex align-items-center" role="alert"><i class="ph ph-funnel-x me-2 fa-150p"></i> Không tìm thấy dữ liệu</div>';
     }
