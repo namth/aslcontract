@@ -775,8 +775,18 @@ function search_multidata() {
     $search = $_POST['search'];
     $key = $_POST['key'];
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+    $current_data_encrypted = isset($_POST['current_data']) ? $_POST['current_data'] : '';
     $items_per_page = 10; // số items mỗi trang
     $offset = ($page - 1) * $items_per_page;
+
+    // Giải mã current_data để biết dữ liệu nào đã được chọn
+    $current_data = [];
+    if (!empty($current_data_encrypted)) {
+        $current_data = json_decode(asl_encrypt($current_data_encrypted, 'd'), true);
+        if (!$current_data) {
+            $current_data = [];
+        }
+    }
 
     $first_dataID = $struct->first->dataID;
     $second_dataID = $struct->second->dataID;
@@ -876,7 +886,18 @@ function search_multidata() {
             }
 
             // Hiển thị dữ liệu bảng thứ hai
-            echo '          <tr class="multiselect_data" data-multiselect="' . $select_data . '" data-parentid="' . $parentID . '" data-key="' . $key . '">
+            $select_data = str_replace(array_keys($data), array_values($data), $second_field);
+            
+            // Kiểm tra xem item này đã được chọn chưa
+            $is_selected = false;
+            if (isset($current_data[$parentID]) && in_array($select_data, $current_data[$parentID])) {
+                $is_selected = true;
+            }
+            
+            $row_class = $is_selected ? 'selected' : 'multiselect_data';
+            $icon_html = $is_selected ? '<i class="ph ph-trash text-danger fa-150p remove-multidata" style="cursor: pointer;" title="Xóa"></i>' : '<i class="ph ph-hand-pointing fa-150p"></i>';
+            
+            echo '          <tr class="' . $row_class . '" data-multiselect="' . $select_data . '" data-parentid="' . $parentID . '" data-key="' . $key . '">
                                 <td class="py-1">
                                     <i class="ph ph-file-magnifying-glass icon-md"></i>
                                 </td>';
@@ -885,7 +906,7 @@ function search_multidata() {
                 echo '          <td>' . (isset($data[$field]) ? $data[$field] : '') . '</td>';
             }
             echo '              <td>
-                                    <i class="ph ph-hand-pointing fa-150p"></i>
+                                    ' . $icon_html . '
                                 </td>
                             </tr>';
         }
@@ -895,77 +916,77 @@ function search_multidata() {
                 </div>';
 
         // Thêm phân trang
-        // if($total_pages > 1){
-        //     echo '<div class="d-flex justify-content-center align-items-center mt-3">
-        //             <nav aria-label="Page navigation">
-        //                 <ul class="pagination">';
+        if($total_pages > 1){
+            echo '<div class="d-flex justify-content-center align-items-center mt-3">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">';
             
-        //     // Nút Previous
-        //     if($page > 1){
-        //         echo '<li class="page-item">
-        //                 <a class="page-link multidata-page" href="#" data-page="' . ($page - 1) . '" data-search="' . $search . '" data-key="' . $key . '" data-struct="' . $_POST['struct'] . '">
-        //                     <i class="ph ph-caret-left"></i>
-        //                 </a>
-        //               </li>';
-        //     }
+            // Nút Previous
+            if($page > 1){
+                echo '<li class="page-item">
+                        <a class="btn-inverse-info page-link multidata-page" href="#" data-page="' . ($page - 1) . '" data-search="' . $search . '" data-key="' . $key . '" data-struct="' . $_POST['struct'] . '" data-current="' . $current_data_encrypted . '">
+                            <i class="ph ph-caret-left"></i>
+                        </a>
+                      </li>';
+            }
             
-        //     // Các số trang
-        //     $start_page = max(1, $page - 2);
-        //     $end_page = min($total_pages, $page + 2);
+            // Các số trang với logic hiển thị trang đầu và trang cuối
+            $start_page = max(1, $page - 2);
+            $end_page = min($total_pages, $page + 2);
             
-        //     for($i = $start_page; $i <= $end_page; $i++){
-        //         $active_class = ($i == $page) ? 'active' : '';
-        //         echo '<li class="page-item ' . $active_class . '">
-        //                 <a class="page-link multidata-page" href="#" data-page="' . $i . '" data-search="' . $search . '" data-key="' . $key . '" data-struct="' . $_POST['struct'] . '">' . $i . '</a>
-        //               </li>';
-        //     }
-            
-        //     // Nút Next
-        //     if($page < $total_pages){
-        //         echo '<li class="page-item">
-        //                 <a class="page-link multidata-page" href="#" data-page="' . ($page + 1) . '" data-search="' . $search . '" data-key="' . $key . '" data-struct="' . $_POST['struct'] . '">
-        //                     <i class="ph ph-caret-right"></i>
-        //                 </a>
-        //               </li>';
-        //     }
-            
-        //     echo '      </ul>
-        //             </nav>
-        //             <div class="ms-3">
-        //                 <small class="text-muted">Trang ' . $page . ' / ' . $total_pages . ' (Tổng: ' . $total_count . ' kết quả)</small>
-        //             </div>
-        //           </div>';
-        // }
-        
-        // echo '</div>';
-        
-        // // Thêm JavaScript để xử lý phân trang
-        // echo '<script>
-        // $(document).ready(function(){
-        //     $(".multidata-page").click(function(e){
-        //         e.preventDefault();
-        //         var page = $(this).data("page");
-        //         var search = $(this).data("search");
-        //         var key = $(this).data("key");
-        //         var struct = $(this).data("struct");
+            // Luôn hiển thị trang 1
+            if($start_page > 1){
+                $active_class = ($page == 1) ? 'active' : '';
+                echo '<li class="page-item ' . $active_class . '">
+                        <a class="btn-inverse-info page-link multidata-page" href="#" data-page="1" data-search="' . $search . '" data-key="' . $key . '" data-struct="' . $_POST['struct'] . '" data-current="' . $current_data_encrypted . '">1</a>
+                      </li>';
                 
-        //         $.ajax({
-        //             url: ajax_url,
-        //             type: "POST",
-        //             data: {
-        //                 action: "search_multidata",
-        //                 search: search,
-        //                 key: key,
-        //                 struct: struct,
-        //                 page: page
-        //             },
-        //             success: function(response){
-        //                 $("#select_multidata_form").parent().html(response);
-        //             }
-        //         });
-        //     });
-        // });
-        // </script>';
+                // Thêm dấu ... nếu có khoảng cách
+                if($start_page > 2){
+                    echo '<li class="page-item btn-white">
+                            <span class="page-link">...</span>
+                          </li>';
+                }
+            }
+            
+            // Hiển thị các trang ở giữa
+            for($i = $start_page; $i <= $end_page; $i++){
+                $active_class = ($i == $page) ? 'active' : '';
+                echo '<li class="page-item ' . $active_class . '">
+                        <a class="btn-inverse-info page-link multidata-page" href="#" data-page="' . $i . '" data-search="' . $search . '" data-key="' . $key . '" data-struct="' . $_POST['struct'] . '" data-current="' . $current_data_encrypted . '">' . $i . '</a>
+                      </li>';
+            }
+            
+            // Luôn hiển thị trang cuối
+            if($end_page < $total_pages){
+                // Thêm dấu ... nếu có khoảng cách
+                if($end_page < $total_pages - 1){
+                    echo '<li class="page-item btn-white">
+                            <span class="page-link">...</span>
+                          </li>';
+                }
+                
+                $active_class = ($page == $total_pages) ? 'active' : '';
+                echo '<li class="page-item ' . $active_class . '">
+                        <a class="btn-inverse-info page-link multidata-page" href="#" data-page="' . $total_pages . '" data-search="' . $search . '" data-key="' . $key . '" data-struct="' . $_POST['struct'] . '" data-current="' . $current_data_encrypted . '">' . $total_pages . '</a>
+                      </li>';
+            }
+            
+            // Nút Next
+            if($page < $total_pages){
+                echo '<li class="page-item">
+                        <a class="btn-inverse-info page-link multidata-page" href="#" data-page="' . ($page + 1) . '" data-search="' . $search . '" data-key="' . $key . '" data-struct="' . $_POST['struct'] . '" data-current="' . $current_data_encrypted . '">
+                            <i class="ph ph-caret-right"></i>
+                        </a>
+                      </li>';
+            }
+            
+            echo '      </ul>
+                    </nav>
+                  </div>';
+        }
+        
+        echo '</div>';
         
     } else {
         echo '<div class="alert alert-danger d-flex align-items-center" role="alert"><i class="ph ph-funnel-x me-2 fa-150p"></i> Không tìm thấy dữ liệu</div>';
@@ -988,6 +1009,45 @@ function select_multidata() {
         $currentdata = [];
     }
     $currentdata[$parentid][] = $multiselect;
+
+    $show = process_multidata($struct, $currentdata, true);
+
+    $result = [
+        'outputdata' => asl_encrypt(json_encode($currentdata)),
+        'show'  => $show
+    ];
+    echo json_encode($result);
+    exit;
+}
+
+add_action('wp_ajax_remove_multidata', 'remove_multidata');
+function remove_multidata() {
+    global $wpdb;
+    $multiselect    = $_POST['multiselect'];
+    $parentid       = $_POST['parentid'];
+    $currentdata    = $_POST['currentdata'];
+    $struct         = json_decode(asl_encrypt($_POST['struct'], 'd'));
+    
+    if ($currentdata) {
+        $currentdata = json_decode(asl_encrypt($currentdata, 'd'), true);
+    } else {
+        $currentdata = [];
+    }
+    
+    // Xóa multiselect khỏi currentdata[parentid]
+    if (isset($currentdata[$parentid])) {
+        $key = array_search($multiselect, $currentdata[$parentid]);
+        if ($key !== false) {
+            unset($currentdata[$parentid][$key]);
+            // Reindex array để tránh holes
+            $currentdata[$parentid] = array_values($currentdata[$parentid]);
+            
+            // Nếu mảng trống thì xóa luôn parentid
+            if (empty($currentdata[$parentid])) {
+                unset($currentdata[$parentid]);
+            }
+        }
+    }
 
     $show = process_multidata($struct, $currentdata, true);
 

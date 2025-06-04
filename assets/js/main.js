@@ -372,9 +372,20 @@ jQuery(document).ready(function ($) {
         var key     = $(this).data('key');
         var struct  = $('input[name="struct_' + key + '"]').val();
         var search  = $('input[name="search_' + key + '"]').val();
+        var page    = 1; // Trang đầu tiên
         var $this   = $(this);
 
         console.log(struct);
+        
+        performMultiSearch(struct, key, search, page, $this);
+    });
+
+    /* 
+    * Hàm chung để thực hiện tìm kiếm multidata với phân trang
+    */
+    function performMultiSearch(struct, key, search, page, $this) {
+        // Lấy current_data để biết dữ liệu nào đã được chọn
+        var current_data = $('input[name="custom#multidata#' + key + '"]').val();
         
         $.ajax({
             type: 'POST',
@@ -383,19 +394,56 @@ jQuery(document).ready(function ($) {
                 action: 'search_multidata',
                 struct: struct,
                 key: key,
-                search: search
+                search: search,
+                page: page,
+                current_data: current_data
             },
             beforeSend: function () {
-                $this.find('i').hide();
-                $this.find('.loader').show();
-                // console.log(childID);
+                if ($this) {
+                    $this.find('i').hide();
+                    $this.find('.loader').show();
+                }
             },
             success: function (response) {
-                $this.find('i').show();
-                $this.find('.loader').hide();
-                $this.parents().eq(2).find('#selectResult').html(response);
+                if ($this) {
+                    $this.find('i').show();
+                    $this.find('.loader').hide();
+                }
+                // Tìm container phù hợp để hiển thị kết quả
+                var $container;
+                if ($this) {
+                    // Tìm từ button search về container gần nhất
+                    $container = $this.closest('.replace_area').find('#selectResult');
+                    if ($container.length === 0) {
+                        $container = $this.closest('.data_replace_box').find('#selectResult');
+                    }
+                } else {
+                    // Khi được gọi từ pagination, tìm container theo key
+                    $container = $('#selectResult').length > 0 ? $('#selectResult') : $('.replace_result').first();
+                }
+                $container.html(response);
             }
         });
+    }
+
+    /* 
+    * Xử lý phân trang cho multidata search
+    */
+    $(document).on('click', '.multidata-page', function(e) {
+        e.preventDefault();
+        var page = $(this).data("page");
+        var search = $(this).data("search");
+        var key = $(this).data("key");
+        var struct = $(this).data("struct");
+        var current_data = $(this).data("current");
+        
+        // Cập nhật current_data trong input trước khi tìm kiếm
+        if (current_data) {
+            $('input[name="custom#multidata#' + key + '"]').val(current_data);
+        }
+        
+        // Sử dụng hàm chung để thực hiện tìm kiếm
+        performMultiSearch(struct, key, search, page, null);
     });
 
     /* process when form with id select_multidata_form submited */
@@ -407,8 +455,9 @@ jQuery(document).ready(function ($) {
         var struct      = $('input[name="struct_' + key + '"]').val();
         var currentdata = $('input[name="custom#multidata#' + key + '"]').val();
         
-        $(this).hide();
-
+        // Thay vì ẩn, thêm class selected và icon xóa
+        $(this).addClass('selected').removeClass('multiselect_data');
+        $(this).find('td:last').html('<i class="ph ph-trash text-danger fa-150p remove-multidata" style="cursor: pointer;" title="Xóa"></i>');
 
         $.ajax({
             type: 'POST',
@@ -422,6 +471,43 @@ jQuery(document).ready(function ($) {
             },
             beforeSend: function () {
                 
+            },
+            success: function (response) {
+                var obj = JSON.parse(response);
+                $('input[name="custom#multidata#' + key + '"]').val(obj.outputdata);
+                $('#multiResult_' + key).html(obj.show);
+            }
+        });
+    });
+
+    /* 
+    * Xử lý khi click vào icon xóa dữ liệu multidata đã chọn
+    */
+    $(document).on('click', '.remove-multidata', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        var $row = $(this).closest('tr');
+        var multiselect = $row.data('multiselect');
+        var key = $row.data('key');
+        var parentid = $row.data('parentid');
+        var struct = $('input[name="struct_' + key + '"]').val();
+        var currentdata = $('input[name="custom#multidata#' + key + '"]').val();
+        
+        // Khôi phục trạng thái ban đầu của row
+        $row.removeClass('selected').addClass('multiselect_data');
+        $row.find('td:last').html('<i class="ph ph-hand-pointing fa-150p"></i>');
+
+        // Gọi AJAX để xóa dữ liệu khỏi currentdata
+        $.ajax({
+            type: 'POST',
+            url: AJAX.ajax_url,
+            data: {
+                action: 'remove_multidata',
+                multiselect: multiselect,
+                parentid: parentid,
+                currentdata: currentdata,
+                struct: struct
             },
             success: function (response) {
                 var obj = JSON.parse(response);

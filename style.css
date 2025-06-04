@@ -209,3 +209,37 @@
 .hover_display:hover .d-none {
     display: flex !important;
 }
+/* Multidata selection styles */
+.multiselect_data {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.multiselect_data:hover {
+    background-color: #f8f9fa !important;
+}
+
+.selected {
+    background-color: #e3f2fd !important;
+    border-left: 3px solid #2196f3;
+}
+
+.selected:hover {
+    background-color: #bbdefb !important;
+}
+
+.remove-multidata {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.remove-multidata:hover {
+    color: #dc3545 !important;
+    transform: scale(1.1);
+}
+
+.pagination .active .page-link {
+    background: #51b1e1;
+    color: white;
+    border-color: #96d0ed;
+}

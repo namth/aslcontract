@@ -565,7 +565,6 @@ get_header();
                                                         <li>Quản lý có thể xem tài liệu của nhân viên cấp dưới</li>
                                                         <li>Tự động filter dữ liệu theo quyền hạn</li>
                                                         <li>Báo cáo thống kê theo cấu trúc tổ chức</li>
-                                                        <li>Workflow phê duyệt tài liệu</li>
                                                     </ul>
                                                 </div>
                                             </div>
