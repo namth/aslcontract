@@ -31,30 +31,53 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
     $tagName = $_POST['tagName'];
     $tagDescription = $_POST['tagDescription'];
     $tagModified = date('Y-m-d H:i:s');
+    $googleFileID = ($tag->tagType === 'google') ? getGoogleIdFromUrl($_POST['googleFileID']) : $tag->googleFileID;
 
     # tagName is required, if not have, then show error message
     if (empty($tagName)) {
         $notification = 'Tên thư mục không được để trống';
         $error = true;
     }
+    
+    # googleFileID is required if tagType is 'google'
+    if ($tag->tagType === 'google' && empty($googleFileID)) {
+        $notification = 'ID tài liệu Google không được để trống';
+        $error = true;
+    }
 
     # if not error, then update data in database
     if (!$error) {
+        $updateData = array(
+            'tagName' => $tagName,
+            'tagDescription' => $tagDescription,
+            'tagModified' => $tagModified
+        );
+        
+        # Add googleFileID to update data if it's a Google tag
+        if ($tag->tagType === 'google') {
+            $updateData['googleFileID'] = $googleFileID;
+        }
+        
         $wpdb->update(
             $table_name,
-            array(
-                'tagName' => $tagName,
-                'tagDescription' => $tagDescription,
-                'tagModified' => $tagModified
-            ),
+            $updateData,
             array('tagID' => $tagID)
         );
         # if not success, then show error message
         if ($wpdb->last_error) {
             $notification = 'Cập nhật thư mục thất bại';
         } else {
-            # redirect to manage tags page
-            wp_redirect(home_url('/manage-tags'));
+            # Share Google file with system email if it's a Google tag
+            if ($tag->tagType === 'google' && !empty($googleFileID)) {
+                $systemEmail = defined('GG_APP_EMAIL') ? GG_APP_EMAIL : '';
+                if ($systemEmail) {
+                    shareGoogleDriveItem($googleFileID, $systemEmail);
+                }
+            }
+            
+            # redirect to manage tags page with tagType parameter
+            $redirectUrl = add_query_arg('tagType', $tag->tagType, home_url('/manage-tags'));
+            wp_redirect($redirectUrl);
             exit;
         }
     } 
@@ -92,6 +115,12 @@ get_header();
                                     <label for="tagDescription">Mô tả ngắn</label>
                                     <input type="text" class="form-control text-center" id="tagDescription" name="tagDescription" value="<?php echo esc_attr($tag->tagDescription); ?>">
                                 </div>
+                                <?php if ($tag->tagType === 'google'): ?>
+                                <div class="form-group">
+                                    <label for="googleFileID">ID tài liệu Google</label>
+                                    <input type="text" class="form-control text-center" id="googleFileID" name="googleFileID" value="<?php echo esc_attr($tag->googleFileID); ?>">
+                                </div>
+                                <?php endif; ?>
                                 <?php
                                 wp_nonce_field('post_tag', 'post_tag_field');
                                 ?>

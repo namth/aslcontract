@@ -141,6 +141,7 @@ get_header();
                                                                         <p><strong>Mục đích:</strong> Quản lý thư mục Google Drive nơi lưu trữ tài liệu được tạo</p>
                                                                         <p><strong>Các bước tạo:</strong></p>
                                                                         <ol>
+                                                                            <li>Tạo thư mục trong Google Drive, và chia sẻ quyền edit cho email <b class="text-danger"><?php echo GG_APP_EMAIL; ?></b></li>
                                                                             <li>Vào <strong>Quản lý thư mục Google > Tạo thư mục mới</strong></li>
                                                                             <li>Nhập tên thư mục (ví dụ: "Hợp đồng lao động")</li>
                                                                             <li>Nhập mô tả cho thư mục</li>
@@ -160,6 +161,7 @@ get_header();
                                                                 <li><strong>Thư mục Template:</strong> Chỉ để phân loại template trong hệ thống</li>
                                                                 <li><strong>Google Tags:</strong> Là địa chỉ thư mục Google Drive thực tế nơi tài liệu sẽ được lưu</li>
                                                                 <li>Cần tạo cả 2 loại trước khi tạo template</li>
+                                                                <li>Đối với loại <strong>Google Tags</strong>, thư mục Google Drive <b>bắt buộc</b> phải được chia sẻ quyền edit với email hệ thống này: <b class="text-danger"><?php echo GG_APP_EMAIL; ?></b></li>
                                                             </ul>
                                                         </div>
                                                     </div>
@@ -186,14 +188,15 @@ get_header();
 
                                                         <h5><span class="badge bg-primary">Bước 2</span> Chọn file mẫu</h5>
                                                         <ul>
-                                                            <li>Nhập Google File ID của tài liệu Google Docs mẫu</li>
+                                                            <li>Nhập Google File ID hoặc đường dẫn url của tài liệu Google Docs mẫu</li>
+                                                            <li><b>Quan trọng:</b> Chia sẻ quyền edit của file tài liệu Google Docs cho email <b class="text-danger"><?php echo GG_APP_EMAIL; ?></b></li>
                                                             <li>File này sẽ được sử dụng làm template gốc</li>
                                                         </ul>
 
                                                         <h5><span class="badge bg-primary">Bước 3</span> Cấu hình dữ liệu thay thế</h5>
                                                         <p>Đây là bước quan trọng nhất. Bạn có thể thêm các loại dữ liệu:</p>
-                                                        <div class="row">
-                                                            <div class="col-md-6">
+                                                        <div class="row mb-3">
+                                                            <div class="col-md-3">
                                                                 <div class="card border border-info">
                                                                     <div class="card-body">
                                                                         <h6><i class="ph ph-database me-2"></i>Nguồn dữ liệu</h6>
@@ -201,7 +204,7 @@ get_header();
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div class="col-md-6">
+                                                            <div class="col-md-3">
                                                                 <div class="card border border-success">
                                                                     <div class="card-body">
                                                                         <h6><i class="ph ph-math-operations me-2"></i>Công thức</h6>
@@ -209,9 +212,7 @@ get_header();
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                        <div class="row mt-2">
-                                                            <div class="col-md-6">
+                                                            <div class="col-md-3">
                                                                 <div class="card border border-warning">
                                                                     <div class="card-body">
                                                                         <h6><i class="ph ph-calendar-plus me-2"></i>Ngày tháng</h6>
@@ -219,7 +220,7 @@ get_header();
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div class="col-md-6">
+                                                            <div class="col-md-3">
                                                                 <div class="card border border-danger">
                                                                     <div class="card-body">
                                                                         <h6><i class="ph ph-align-left-simple me-2"></i>Text tự do</h6>
@@ -228,7 +229,7 @@ get_header();
                                                                 </div>
                                                             </div>
                                                         </div>
-
+                                                        
                                                         <h5><span class="badge bg-primary">Bước 4</span> Cấu hình thư mục đích</h5>
                                                         <ul>
                                                             <li><strong>Chọn Google Tag:</strong> Thay vì nhập trực tiếp Google Folder ID, bạn chọn từ danh sách Google Tag có sẵn</li>

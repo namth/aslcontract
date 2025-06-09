@@ -232,8 +232,8 @@ get_header();
                                             <select class="form-control js-example-basic-single w300" id="tagID" name="tagID">
                                                 <option value="">-- Chọn phân loại --</option>
                                                 <?php 
-                                                    # get all tag from database and show here
-                                                    $tags = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}asltags");
+                                                    # get only normal tags from database
+                                                    $tags = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}asltags WHERE tagType = 'normal'");
                                                     if ($tags) {
                                                         foreach ($tags as $tag) {
                                                             echo '<option value="' . $tag->tagID . '">' . $tag->tagName . '</option>';

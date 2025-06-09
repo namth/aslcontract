@@ -243,3 +243,22 @@
     color: white;
     border-color: #96d0ed;
 }
+/* Connection status dots for Google tags */
+.connection-dot {
+    font-size: 1.2em;
+    line-height: 1;
+    display: inline-block;
+}
+
+.connection-dot.connected {
+    color: #28a745; /* Green color for connected */
+}
+
+.connection-dot.disconnected {
+    color: #dc3545; /* Red color for disconnected */
+}
+
+.connection-dot:hover {
+    transform: scale(1.2);
+    transition: transform 0.2s ease;
+}
