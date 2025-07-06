@@ -606,9 +606,13 @@ function create_document() {
 
                     case 'date':
                         $format = $_POST['format_' . $newkey];
-                        $date_arr = explode('/', $value);
-                        $replacevalue = str_replace(array('dd', 'mm', 'YYYY'), $date_arr, $format);
-                        $replacements[$newkey] = $replacevalue;
+                        if ($value) {
+                            $en_date = formatDateToEnglish($value);
+                            $date_arr = explode('/', $value);
+                            $date_arr[] = $en_date;
+                            $replacevalue = str_replace(array('dd', 'mm', 'YYYY', 'english_date'), $date_arr, $format);
+                            $replacements[$newkey] = $replacevalue;
+                        }
                         break;
 
                     case 'multidata':

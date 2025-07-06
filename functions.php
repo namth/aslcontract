@@ -360,3 +360,13 @@ function getGoogleIdFromUrl(string $url): ?string
     // Nếu không tìm thấy ID nào, trả lại kết quả là $url
     return $url;
 }
+
+function formatDateToEnglish($dateString) {
+    // Đặt locale tiếng Anh
+    setlocale(LC_TIME, 'en_US.UTF-8');
+    
+    $date = DateTime::createFromFormat('d/m/Y', $dateString);
+    $result = $date->format('F jS Y');
+    
+    return $result;
+}
