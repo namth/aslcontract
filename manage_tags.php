@@ -106,7 +106,7 @@ get_header();
                             <div class="d-flex align-items-center gap-3 w-100 justify-content-between">
                                 <div class="p-2 d-flex align-items-center card-subtitle">
                                     <i class="ph ph-calendar-blank me-1"></i>
-                                    <small><?php echo $tag->tagModified; ?></small>
+                                    <small><?php echo wp_date('d/m/Y H:i', strtotime($tag->tagModified)); ?></small>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center gap-2">
                                     <?php if ($tagType === 'google' && !empty($tag->googleFileID)): ?>

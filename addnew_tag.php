@@ -13,7 +13,7 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
 
     $tagName = $_POST['tagName'];
     $tagDescription = $_POST['tagDescription'];
-    $tagModified = date('Y-m-d H:i:s');
+    $tagModified = current_time('mysql');
     $tagType = isset($_POST['tagType']) ? sanitize_text_field($_POST['tagType']) : 'normal';
     $googleFileID = ($tagType === 'google') ? getGoogleIdFromUrl($_POST['googleFileID']) : '';
 

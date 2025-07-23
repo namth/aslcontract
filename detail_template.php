@@ -106,87 +106,88 @@ $create_user = get_userdata($template->userID);
                             echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-chat-teardrop-text me-2'></i>Tên file mẫu:</b> " . $template->gDestinationFilename . "</span>";
                             echo "<span class='d-flex align-items-center mb-2 gap-2'><b><i class='ph-bold ph-user me-2'></i>Người tạo:</b> " . $create_user->display_name . "</span>";
 
-                            echo '<div class="d-flex align-items-center gap-3 mt-2">
-                                    <span class="d-flex align-items-center gap-2">
-                                        <b><i class="ph-bold ph-database me-2"></i>Data Source</b>
-                                    </span>';
+                            # Only show data source section for administrators
                             if (current_user_can('administrator')) {
+                                echo '<div class="d-flex align-items-center gap-3 mt-2">
+                                        <span class="d-flex align-items-center gap-2">
+                                            <b><i class="ph-bold ph-database me-2"></i>Data Source</b>
+                                        </span>';
                                 echo '  <a href="' . home_url('/edit-template/?action=delete&templateID=') . $templateID . '" class="btn btn-icon-text me-2 d-flex align-items-center">
                                             <i class="ph ph-pencil-simple-line fa-150p"></i>
                                         </a>';
-                            }
-                            echo '</div>';
-                            # get child data source and replacement data from aslreplacement table
-                            $childs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}aslreplacement WHERE templateID = $templateID");
-                            if ($childs) {
-                                foreach ($childs as $child) {
-                                    # get childName from aslchilddatasource table by childID
-                                    $childData = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $child->childID");
-                                    
-                                    $datasourceName = $childData->childName ?? 'Custom';
+                                echo '</div>';
+                                # get child data source and replacement data from aslreplacement table
+                                $childs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}aslreplacement WHERE templateID = $templateID");
+                                if ($childs) {
+                                    foreach ($childs as $child) {
+                                        # get childName from aslchilddatasource table by childID
+                                        $childData = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $child->childID");
+                                        
+                                        $datasourceName = $childData->childName ?? 'Custom';
 
-                                    # print replacement data
-                                    ?>
-                                    <div class="data_replace_box d-flex align-items-center gap-4 fit-content mb-2">
-                                        <div class="d-flex justify-content-center flex-column text-center">
-                                            <i class="ph ph-database icon-lg p-2"></i>
-                                            <div class="d-flex flex-column">
-                                                <span class="fw-bold">
-                                                    <?php 
-                                                        echo $datasourceName;
-                                                    ?>
-                                                </span>
+                                        # print replacement data
+                                        ?>
+                                        <div class="data_replace_box d-flex align-items-center gap-4 fit-content mb-2">
+                                            <div class="d-flex justify-content-center flex-column text-center">
+                                                <i class="ph ph-database icon-lg p-2"></i>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-bold">
+                                                        <?php 
+                                                            echo $datasourceName;
+                                                        ?>
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="replace_area d-flex align-items-center flex-column justify-content-center gap-3">
-                                            <div class="replace_header d-flex justify-content-center align-items-center p-2 gap-3">
-                                                <i class="ph ph-puzzle-piece icon-md"></i>
-                                                <span class="w300">Từ khóa thay thế</span>
-                                                <i class="ph ph-arrow-circle-right icon-md"></i>
-                                                <span class="w300">Dữ liệu</span>
-                                            </div>
-                                            <?php 
-                                                $datareplace = json_decode($child->dataReplace);
-                                                
-                                                foreach($datareplace as $key => $value){
-                                                    $type = $value->type;
-                                                    if($type == 'multitext'){
-                                                        $first = $value->first->dataID;
-                                                        $second = $value->second->dataID;
-                                                        $first_datasource = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $first");
-                                                        $second_datasource = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $second");
+                                            <div class="replace_area d-flex align-items-center flex-column justify-content-center gap-3">
+                                                <div class="replace_header d-flex justify-content-center align-items-center p-2 gap-3">
+                                                    <i class="ph ph-puzzle-piece icon-md"></i>
+                                                    <span class="w300">Từ khóa thay thế</span>
+                                                    <i class="ph ph-arrow-circle-right icon-md"></i>
+                                                    <span class="w300">Dữ liệu</span>
+                                                </div>
+                                                <?php 
+                                                    $datareplace = json_decode($child->dataReplace);
+                                                    
+                                                    foreach($datareplace as $key => $value){
+                                                        $type = $value->type;
+                                                        if($type == 'multitext'){
+                                                            $first = $value->first->dataID;
+                                                            $second = $value->second->dataID;
+                                                            $first_datasource = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $first");
+                                                            $second_datasource = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}aslchilddatasource WHERE childID = $second");
 
-                                                        $show_value = '
-                                                            <div class="d-flex align-items-center gap-2">
-                                                                <i class="ph ph-table icon-md"></i>
-                                                                <span>' . $first_datasource->childName . '</span>
-                                                                <i class="ph ph-flow-arrow icon-md px-3"></i>
-                                                                <i class="ph ph-table icon-md"></i>
-                                                                <span>' . $second_datasource->childName . '</span>
-                                                            </div>';
-                                                    } else {
-                                                        $show_value = isset($value->field) ? $value->field : "";
-                                                        if(!$show_value) {
-                                                            $blank_default = isset($value->default) ? $value->default : "";
+                                                            $show_value = '
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <i class="ph ph-table icon-md"></i>
+                                                                    <span>' . $first_datasource->childName . '</span>
+                                                                    <i class="ph ph-flow-arrow icon-md px-3"></i>
+                                                                    <i class="ph ph-table icon-md"></i>
+                                                                    <span>' . $second_datasource->childName . '</span>
+                                                                </div>';
+                                                        } else {
+                                                            $show_value = isset($value->field) ? $value->field : "";
+                                                            if(!$show_value) {
+                                                                $blank_default = isset($value->default) ? $value->default : "";
 
-                                                            if($blank_default) {
-                                                                $show_value = 'Dữ liệu tự điền. Mặc định: ' . $blank_default;
-                                                            } else {
-                                                                $show_value = 'Dữ liệu tự điền.';
+                                                                if($blank_default) {
+                                                                    $show_value = 'Dữ liệu tự điền. Mặc định: ' . $blank_default;
+                                                                } else {
+                                                                    $show_value = 'Dữ liệu tự điền.';
+                                                                }
                                                             }
                                                         }
+                                                        echo '<div class="replace_field d-flex justify-content-center align-items-center gap-3">
+                                                                <i class="ph ph-puzzle-piece icon-md"></i>
+                                                                <span class="w300">' . $key . '</span>
+                                                                <i class="ph ph-arrow-circle-right icon-md"></i>
+                                                                <span class="mnw300">' . $show_value . '</span>
+                                                            </div>';
                                                     }
-                                                    echo '<div class="replace_field d-flex justify-content-center align-items-center gap-3">
-                                                            <i class="ph ph-puzzle-piece icon-md"></i>
-                                                            <span class="w300">' . $key . '</span>
-                                                            <i class="ph ph-arrow-circle-right icon-md"></i>
-                                                            <span class="mnw300">' . $show_value . '</span>
-                                                        </div>';
-                                                }
-                                            ?>
+                                                ?>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <?php
+                                        <?php
+                                    }
                                 }
                             }
                             ?>

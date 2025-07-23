@@ -54,7 +54,7 @@ if (isset($_POST['post_template_field']) && wp_verify_nonce($_POST['post_templat
                 'gFileID' => $google_fileID,
                 'googleTagID' => $googleTagID,
                 'gDestinationFilename' => $gDestinationFilename,
-                'templateModified' => date('Y-m-d H:i:s')
+                'templateModified' => current_time('mysql')
             ),
             array('templateID' => $templateID)
         );

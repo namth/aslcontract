@@ -5,6 +5,12 @@ require_once __DIR__ .'/functions/google_api.php';
 require_once __DIR__ .'/functions/onedrive_api.php';
 require_once __DIR__ .'/ajax_function.php';
 
+/* Set timezone to Vietnam GMT+7 */
+function set_vietnam_timezone() {
+    date_default_timezone_set('Asia/Ho_Chi_Minh');
+}
+add_action('init', 'set_vietnam_timezone');
+
 use Google\Client as Google_Client;
 use Google\Service\Drive as Google_Service_Drive;
 
@@ -366,7 +372,7 @@ function formatDateToEnglish($dateString) {
     setlocale(LC_TIME, 'en_US.UTF-8');
     
     $date = DateTime::createFromFormat('d/m/Y', $dateString);
-    $result = $date->format('F jS Y');
+    $result = $date->format('F jS, Y');
     
     return $result;
 }

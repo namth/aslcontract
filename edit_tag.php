@@ -30,7 +30,7 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
 
     $tagName = $_POST['tagName'];
     $tagDescription = $_POST['tagDescription'];
-    $tagModified = date('Y-m-d H:i:s');
+    $tagModified = current_time('mysql');
     $googleFileID = ($tag->tagType === 'google') ? getGoogleIdFromUrl($_POST['googleFileID']) : $tag->googleFileID;
 
     # tagName is required, if not have, then show error message

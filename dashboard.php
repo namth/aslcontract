@@ -155,7 +155,7 @@ $doc_count = $wpdb->get_var(
                                     <div class="d-flex align-items-center gap-3 w-100 justify-content-between">
                                         <div class="p-2 d-flex align-items-center card-subtitle">
                                             <i class="ph ph-calendar-blank me-1"></i>
-                                            <small><?php echo date('d/m/Y', strtotime($doc->documentModified)); ?></small>
+                                            <small><?php echo wp_date('d/m/Y H:i', strtotime($doc->documentModified)); ?></small>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center gap-2">
                                             <a href="https://docs.google.com/document/d/<?php echo $doc->gFileID; ?>/edit" class="nav-link fa-150p" target="_blank">

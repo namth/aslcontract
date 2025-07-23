@@ -15,7 +15,7 @@ if (isset($_POST['post_datasource_field']) && wp_verify_nonce($_POST['post_datas
     $header = $_POST['header'];
     $searchfield = $_POST['searchfield'];
     $childDescription = $_POST['childDescription'];
-    $childModified = date('Y-m-d H:i:s');
+    $childModified = current_time('mysql');
 
     $table_name = $wpdb->prefix . 'aslchilddatasource';
     $wpdb->insert(

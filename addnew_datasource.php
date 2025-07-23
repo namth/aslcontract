@@ -12,7 +12,7 @@ if (isset($_POST['post_datasource_field']) && wp_verify_nonce($_POST['post_datas
     $username = $_POST['username'];
     $password = $_POST['password'];
     $token = $_POST['token'];
-    $sourceModified = date('Y-m-d H:i:s');
+    $sourceModified = current_time('mysql');
 
     $table_name = $wpdb->prefix . 'asldatasource';
     $wpdb->insert(
