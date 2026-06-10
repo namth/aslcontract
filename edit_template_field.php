@@ -109,9 +109,9 @@ get_header();
                                             if ($tags) {
                                                 foreach ($tags as $tag) {
                                                     if ($template->tagID == $tag->tagID) {
-                                                        echo '<option value="' . $tag->tagID . '" selected>' . $tag->tagName . '</option>';
+                                                        echo '<option value="' . $tag->tagID . '" selected>' . esc_html(get_tag_path($tag->tagID)) . '</option>';
                                                     } else {
-                                                        echo '<option value="' . $tag->tagID . '">' . $tag->tagName . '</option>';
+                                                        echo '<option value="' . $tag->tagID . '">' . esc_html(get_tag_path($tag->tagID)) . '</option>';
                                                     }
                                                 }
                                             }
@@ -133,7 +133,7 @@ get_header();
                                             if ($google_tags) {
                                                 foreach ($google_tags as $google_tag) {
                                                     $selected = ($template->googleTagID == $google_tag->tagID) ? 'selected' : '';
-                                                    echo '<option value="' . $google_tag->tagID . '" ' . $selected . '>' . $google_tag->tagName . '</option>';
+                                                    echo '<option value="' . $google_tag->tagID . '" ' . $selected . '>' . esc_html(get_tag_path($google_tag->tagID)) . '</option>';
                                                 }
                                             }
                                         ?>

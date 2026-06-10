@@ -5,6 +5,7 @@
 
 # Get tag type from URL parameter, default to 'normal'
 $tagType = isset($_GET['tagType']) ? sanitize_text_field($_GET['tagType']) : 'normal';
+$selected_parent = isset($_GET['parentID']) ? intval($_GET['parentID']) : 0;
 
 # process form data
 if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'], 'post_tag')) {
@@ -32,6 +33,7 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
     # if not error, then insert data to database
     if (!$error) {
         $table_name = $wpdb->prefix . 'asltags';
+        $parentID = !empty($_POST['parentID']) ? intval($_POST['parentID']) : null;
         $wpdb->insert(
             $table_name,
             array(
@@ -39,7 +41,8 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
                 'tagDescription' => $tagDescription,
                 'tagModified' => $tagModified,
                 'tagType' => $tagType,
-                'googleFileID' => $googleFileID
+                'googleFileID' => $googleFileID,
+                'parentID' => $parentID
             )
         );
         # if not success, then show error message
@@ -88,6 +91,24 @@ get_header();
                                 <div class="form-group">
                                     <label for="tagDescription">Mô tả ngắn</label>
                                     <input type="text" class="form-control text-center" id="tagDescription" name="tagDescription">
+                                </div>
+                                <div class="form-group">
+                                    <label for="parentID">Thư mục cha</label>
+                                    <select class="form-control text-center js-example-basic-single" id="parentID" name="parentID">
+                                        <option value="">(Không có - Thư mục gốc)</option>
+                                        <?php 
+                                        global $wpdb;
+                                        $table_name = $wpdb->prefix . 'asltags';
+                                        $parent_tags = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE tagType = %s ORDER BY tagName ASC", $tagType));
+                                        if ($parent_tags) {
+                                            foreach ($parent_tags as $pt) {
+                                                $path = get_tag_path($pt->tagID);
+                                                $selected = ($selected_parent == $pt->tagID) ? 'selected' : '';
+                                                echo '<option value="' . $pt->tagID . '" ' . $selected . '>' . esc_html($path) . '</option>';
+                                            }
+                                        }
+                                        ?>
+                                    </select>
                                 </div>
                                 <input type="hidden" name="tagType" value="<?php echo esc_attr($tagType); ?>">
                                 <?php if ($tagType === 'google'): ?>

@@ -561,7 +561,11 @@ function create_document() {
                                     $path_parts = pathinfo(parse_url($field, PHP_URL_PATH));
                                     if (isset($path_parts['extension']) && in_array(strtolower($path_parts['extension']), $image_extensions)) {
                                         $img_replacements[$key] = $field;
+                                    } else {
+                                        $replacements[$key] = '';
                                     }
+                                } else {
+                                    $replacements[$key] = '';
                                 }
                                 break;
 
@@ -630,7 +634,11 @@ function create_document() {
                             $path_parts = pathinfo(parse_url($value, PHP_URL_PATH));
                             if (isset($path_parts['extension']) && in_array(strtolower($path_parts['extension']), $image_extensions)) {
                                 $img_replacements[$newkey] = $value;
+                            } else {
+                                $replacements[$newkey] = '';
                             }
+                        } else {
+                            $replacements[$newkey] = '';
                         }
                         break;
 

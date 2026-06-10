@@ -70,6 +70,7 @@ function createDatabase(){
         `tagDescription` varchar(255) NOT NULL,
         `tagType` varchar(255) NOT NULL,
         `googleFileID` varchar(255) NULL,
+        `parentID` mediumint(9) UNSIGNED NULL DEFAULT NULL,
         `tagModified` datetime NOT NULL,
         PRIMARY KEY  (tagID)
     ) $charset_collate;";
@@ -375,4 +376,35 @@ function formatDateToEnglish($dateString) {
     $result = $date->format('F jS, Y');
     
     return $result;
+}
+
+# Auto-migrate database for existing tables to add parentID
+function asl_check_and_add_parent_id_column() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'asltags';
+    $row = $wpdb->get_results("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{$table_name}' AND COLUMN_NAME = 'parentID'");
+    if (empty($row)) {
+        $wpdb->query("ALTER TABLE {$table_name} ADD `parentID` mediumint(9) UNSIGNED NULL DEFAULT NULL");
+    }
+}
+add_action('init', 'asl_check_and_add_parent_id_column');
+
+# Helper function to get tag path
+function get_tag_path($tagID) {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'asltags';
+    $path = array();
+    $current_id = $tagID;
+    $limit = 10; // safety limit to prevent circular recursion loop
+    while (!empty($current_id) && $limit > 0) {
+        $tag = $wpdb->get_row($wpdb->prepare("SELECT tagID, tagName, parentID FROM $table_name WHERE tagID = %d", $current_id));
+        if ($tag) {
+            array_unshift($path, $tag->tagName);
+            $current_id = $tag->parentID;
+        } else {
+            break;
+        }
+        $limit--;
+    }
+    return !empty($path) ? implode(' / ', $path) : '';
 }

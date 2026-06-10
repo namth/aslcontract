@@ -11,8 +11,8 @@ get_header();
             <?php
                 global $wpdb;
                 $table_name = $wpdb->prefix . 'asltags';
-                # get all tags
-                $tags = $wpdb->get_results("SELECT * FROM $table_name");
+                # get only root normal tags
+                $tags = $wpdb->get_results("SELECT * FROM $table_name WHERE parentID IS NULL AND tagType = 'normal'");
  
                 # if have tags, then show list of tags
                 if ($tags) {
@@ -33,26 +33,23 @@ get_header();
 
                     foreach ($tags as $tag) {
                         # count number of templates which have this tag->tagID
-                        $table_name = $wpdb->prefix . 'asltemplate';
-                        $count = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE tagID = $tag->tagID");
-
-                        if ($count) {
-                            ?>
-                            <div class="card card-rounded p-3 w165">
-                                <a href="<?php echo home_url('/list-template/?tagid=' . $tag->tagID); ?>" class="d-flex justify-content-center flex-column text-center nav-link">
-                                    <i class="ph ph-folder-open icon-lg p-4"></i>
-                                    <div class="p-2 d-flex flex-column">
-                                        <span class="fw-bold">
-                                            <?php echo $tag->tagName; ?>
-                                        </span>
-                                        <p class="bagde mt-2">
-                                            <i><?php echo $count; ?> mẫu tài liệu</i>
-                                        </p>
-                                    </div>
-                                </a>
-                            </div>
-                            <?php
-                        }
+                        $template_table = $wpdb->prefix . 'asltemplate';
+                        $count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $template_table WHERE tagID = %d", $tag->tagID));
+                        ?>
+                        <div class="card card-rounded p-3 w165">
+                            <a href="<?php echo home_url('/list-template/?tagid=' . $tag->tagID); ?>" class="d-flex justify-content-center flex-column text-center nav-link">
+                                <i class="ph ph-folder-open icon-lg p-4"></i>
+                                <div class="p-2 d-flex flex-column">
+                                    <span class="fw-bold">
+                                        <?php echo esc_html($tag->tagName); ?>
+                                    </span>
+                                    <p class="bagde mt-2">
+                                        <i><?php echo $count; ?> mẫu tài liệu</i>
+                                    </p>
+                                </div>
+                            </a>
+                        </div>
+                        <?php
                     }
                     echo '</div>';
                 }

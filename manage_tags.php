@@ -98,7 +98,7 @@ get_header();
                                 <i class="<?php echo $itemIcon; ?> fa-150p"></i>
                                 <div class="p-2 d-flex gap-3 align-items-center">
                                     <span class="fw-bold">
-                                        <?php echo $tag->tagName; ?>
+                                        <?php echo get_tag_path($tag->tagID); ?>
                                     </span>
                                     <small class="card-subtitle"><i><?php echo $tag->tagDescription; ?></i></small>
                                 </div>

@@ -50,7 +50,8 @@ if (isset($_POST['post_tag_field']) && wp_verify_nonce($_POST['post_tag_field'],
         $updateData = array(
             'tagName' => $tagName,
             'tagDescription' => $tagDescription,
-            'tagModified' => $tagModified
+            'tagModified' => $tagModified,
+            'parentID' => !empty($_POST['parentID']) ? intval($_POST['parentID']) : null
         );
         
         # Add googleFileID to update data if it's a Google tag
@@ -114,6 +115,23 @@ get_header();
                                 <div class="form-group">
                                     <label for="tagDescription">Mô tả ngắn</label>
                                     <input type="text" class="form-control text-center" id="tagDescription" name="tagDescription" value="<?php echo esc_attr($tag->tagDescription); ?>">
+                                </div>
+                                <div class="form-group">
+                                    <label for="parentID">Thư mục cha</label>
+                                    <select class="form-control text-center js-example-basic-single" id="parentID" name="parentID">
+                                        <option value="">(Không có - Thư mục gốc)</option>
+                                        <?php 
+                                        global $wpdb;
+                                        $parent_tags = $wpdb->get_results($wpdb->prepare("SELECT * FROM $table_name WHERE tagType = %s AND tagID != %d ORDER BY tagName ASC", $tag->tagType, $tagID));
+                                        if ($parent_tags) {
+                                            foreach ($parent_tags as $pt) {
+                                                $path = get_tag_path($pt->tagID);
+                                                $selected = ($tag->parentID == $pt->tagID) ? 'selected' : '';
+                                                echo '<option value="' . $pt->tagID . '" ' . $selected . '>' . esc_html($path) . '</option>';
+                                            }
+                                        }
+                                        ?>
+                                    </select>
                                 </div>
                                 <?php if ($tag->tagType === 'google'): ?>
                                 <div class="form-group">
