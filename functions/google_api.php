@@ -319,16 +319,19 @@ function insertImageIntoGoogleDoc($fileId, $img_replacements)
                 if ($paragraphElement->textRun) {
                     $text = $paragraphElement->textRun->content;
                     foreach ($img_replacements as $textToReplace => $imageUrl) {
-                        if (strpos($text, $textToReplace) !== false) {
-                            $startIndex = $paragraphElement->startIndex;
+                        $offset = mb_strpos($text, $textToReplace, 0, 'UTF-8');
+                        if ($offset !== false) {
+                            $placeholderStartIndex = $paragraphElement->startIndex + $offset;
+                            $placeholderEndIndex = $placeholderStartIndex + mb_strlen($textToReplace, 'UTF-8');
+                            $startIndex = $placeholderStartIndex;
                             $found = true;
 
                             // 4. Xóa văn bản cần thay thế ( nếu tìm thấy)
                             $requests[] = new Google_Service_Docs_Request(array(
                                 'deleteContentRange' => [
                                     'range' => [
-                                        'startIndex' => $startIndex,
-                                        'endIndex' => $startIndex + strlen($textToReplace),
+                                        'startIndex' => $placeholderStartIndex,
+                                        'endIndex' => $placeholderEndIndex,
                                     ],
                                 ],
                             ));
@@ -338,7 +341,7 @@ function insertImageIntoGoogleDoc($fileId, $img_replacements)
                                 'insertInlineImage' => array(
                                     'uri' => $imageUrl,
                                     'location' => array(
-                                        'index' => $startIndex,
+                                        'index' => $placeholderStartIndex,
                                     ),
                                     // 'objectSize' => array(
                                     //     'height' => array(
@@ -366,11 +369,15 @@ function insertImageIntoGoogleDoc($fileId, $img_replacements)
                                 if ($paragraphElement->textRun) {
                                     $text = $paragraphElement->textRun->content;
                                     foreach ($img_replacements as $textToReplace => $imageUrl) {
-                                        if (strpos($text, $textToReplace) !== false) {
-                                            $startIndex = $paragraphElement->startIndex;
+                                        $offset = mb_strpos($text, $textToReplace, 0, 'UTF-8');
+                                        if ($offset !== false) {
+                                            $placeholderStartIndex = $paragraphElement->startIndex + $offset;
+                                            $placeholderEndIndex = $placeholderStartIndex + mb_strlen($textToReplace, 'UTF-8');
+                                            $startIndex = $placeholderStartIndex;
                                             $found = true;
 
                                             # Tính toán kích thước cell
+                                            $cellWidth = null;
                                             $tableStyle = $table->getTableStyle();
                                             
                                             if (isset($tableStyle->tableColumnProperties[$colIndex])) {
@@ -391,30 +398,29 @@ function insertImageIntoGoogleDoc($fileId, $img_replacements)
                                             $requests[] = new Google_Service_Docs_Request(array(
                                                 'deleteContentRange' => [
                                                     'range' => [
-                                                        'startIndex' => $startIndex,
-                                                        'endIndex' => $startIndex + strlen($textToReplace),
+                                                        'startIndex' => $placeholderStartIndex,
+                                                        'endIndex' => $placeholderEndIndex,
                                                     ],
                                                 ],
                                             ));
 
                                             // 5. Chèn hình ảnh
-                                            $requests[] = new Google_Service_Docs_Request(array(
-                                                'insertInlineImage' => array(
-                                                    'uri' => $imageUrl,
-                                                    'location' => array(
-                                                        'index' => $startIndex,
+                                            $insertRequest = array(
+                                                'uri' => $imageUrl,
+                                                'location' => array(
+                                                    'index' => $placeholderStartIndex,
+                                                ),
+                                            );
+                                            if ($cellWidth !== null) {
+                                                $insertRequest['objectSize'] = array(
+                                                    'width' => array(
+                                                        'magnitude' => $cellWidth,
+                                                        'unit' => 'PT',
                                                     ),
-                                                    'objectSize' => array(
-                                                        // 'height' => array(
-                                                        //     'magnitude' => 50,
-                                                        //     'unit' => 'PT',
-                                                        // ),
-                                                        'width' => array(
-                                                            'magnitude' => $cellWidth,
-                                                            'unit' => 'PT',
-                                                        ),
-                                                    )
-                                                )
+                                                );
+                                            }
+                                            $requests[] = new Google_Service_Docs_Request(array(
+                                                'insertInlineImage' => $insertRequest
                                             ));
                                         }
                                     }
@@ -433,22 +439,38 @@ function insertImageIntoGoogleDoc($fileId, $img_replacements)
             // Lấy startIndex từ deleteContentRange request
             $startIndexA = null;
             $startIndexB = null;
+            $typeA = null;
+            $typeB = null;
             
             // Tìm startIndex từ deleteContentRange hoặc insertInlineImage
             if (isset($a->deleteContentRange) && isset($a->deleteContentRange->range)) {
                 $startIndexA = $a->deleteContentRange->range->startIndex;
+                $typeA = 'delete';
             } elseif (isset($a->insertInlineImage) && isset($a->insertInlineImage->location)) {
                 $startIndexA = $a->insertInlineImage->location->index;
+                $typeA = 'insert';
             }
             
             if (isset($b->deleteContentRange) && isset($b->deleteContentRange->range)) {
                 $startIndexB = $b->deleteContentRange->range->startIndex;
+                $typeB = 'delete';
             } elseif (isset($b->insertInlineImage) && isset($b->insertInlineImage->location)) {
                 $startIndexB = $b->insertInlineImage->location->index;
+                $typeB = 'insert';
             }
             
-            // Sắp xếp từ lớn đến nhỏ (đảo ngược)
-            return $startIndexB - $startIndexA;
+            if ($startIndexA !== $startIndexB) {
+                return $startIndexB - $startIndexA; // Sắp xếp từ lớn đến nhỏ (đảo ngược)
+            }
+            
+            // Nếu cùng index, 'delete' phải đi trước 'insert'
+            if ($typeA === 'delete' && $typeB === 'insert') {
+                return -1;
+            }
+            if ($typeA === 'insert' && $typeB === 'delete') {
+                return 1;
+            }
+            return 0;
         });
     }
 
